@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/assets/:path*",
+      "destination": "https://john-wolf-portfolio-test-pojtlfvm5-johnwolf-connects-projects.vercel.app/assets/:path*"
+    },
+    {
+      "source": "/ring-lab.html",
+      "destination": "https://john-wolf-portfolio-test-pojtlfvm5-johnwolf-connects-projects.vercel.app/ring-lab.html"
+    }
+  ]
+}
