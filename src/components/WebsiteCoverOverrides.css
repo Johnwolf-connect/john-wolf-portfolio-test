@@ -1,0 +1,45 @@
+/* Website project covers use the Froid movie-poster proportions as the standard. */
+.website-cover-art,
+.websites-desktop-showcase .website-cover-art {
+  aspect-ratio: 29 / 36;
+}
+
+.websites-desktop-showcase .website-cover-rail {
+  grid-auto-columns: clamp(9.5rem, 12.5vw, 12.75rem);
+  gap: 1rem;
+}
+
+.websites-desktop-showcase .website-cover-copy {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.18rem;
+  padding: 0.55rem 0.65rem 0.7rem;
+}
+
+.websites-desktop-showcase .website-cover-copy span {
+  grid-column: auto;
+}
+
+.website-cover-art > img {
+  object-fit: cover;
+  object-position: center;
+}
+
+@media (max-width: 760px) {
+  .website-cover-rail {
+    grid-auto-columns: calc((100vw - 3.8rem) / 3);
+    gap: 0.65rem;
+  }
+
+  .website-cover-copy {
+    padding: 0.65rem 0.6rem 0.75rem;
+  }
+
+  .website-cover-copy strong {
+    font-size: 0.86rem;
+  }
+
+  .website-cover-copy span {
+    font-size: 0.62rem;
+  }
+}
