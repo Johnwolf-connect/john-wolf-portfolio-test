@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import './WebsitesPage.css'
+import './WebsiteCoverOverrides.css'
+
+const FROID_SITE_URL = 'https://froid-clothing-platform-github-d98tx2k50.vercel.app/'
+const FROID_COVER_URL = 'https://at.adobe.com/jTSLybLAKy3gjXwY'
+const WEBSITES_BACKGROUND_URL = 'https://at.adobe.com/1aFhN861M1ZS1Usg'
 
 const websiteCollections = [
   {
@@ -8,7 +13,7 @@ const websiteCollections = [
     title: 'My List',
     description: 'All one-page website experiences.',
     projects: [
-      ['Froid', 'Playable', '#a9e4ff', '#102c64', 'froid', '/assets/froid/froid-editorial.webp'],
+      ['Froid', 'Playable', '#a9e4ff', '#102c64', 'froid', FROID_COVER_URL, FROID_SITE_URL],
       ['Playable Site 01', 'Playable', '#ff8b4a', '#7c1d38'],
       ['Designer Site 01', 'Designer', '#b58cff', '#321451'],
       ['Service Site 02', 'Service', '#71e0b4', '#103f43'],
@@ -31,7 +36,7 @@ const websiteCollections = [
     title: 'Playable',
     description: 'Interactive experiences designed around motion, discovery, and play.',
     projects: [
-      ['Froid', 'Playable', '#a9e4ff', '#102c64', 'froid', '/assets/froid/froid-editorial.webp'],
+      ['Froid', 'Playable', '#a9e4ff', '#102c64', 'froid', FROID_COVER_URL, FROID_SITE_URL],
       ['Playable Site 02', 'Playable', '#ffd35f', '#682e16'],
       ['Playable Site 03', 'Playable', '#74d8ff', '#18325f'],
     ],
@@ -49,18 +54,28 @@ const websiteCollections = [
 ]
 
 function WebsiteCover({ project, index, onOpenProject }) {
-  const [title, category, accent, depth, slug, thumbnail] = project
+  const [title, category, accent, depth, slug, thumbnail, externalUrl] = project
+  const interactive = Boolean(slug || externalUrl)
+
+  const openProject = () => {
+    if (externalUrl) {
+      window.open(externalUrl, '_blank', 'noopener,noreferrer')
+      return
+    }
+
+    if (slug) onOpenProject?.(slug)
+  }
 
   return (
     <article
       className="website-cover"
-      role={slug ? 'button' : undefined}
-      tabIndex={slug ? 0 : undefined}
-      onClick={() => slug && onOpenProject?.(slug)}
+      role={interactive ? 'button' : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      onClick={openProject}
       onKeyDown={(event) => {
-        if (slug && (event.key === 'Enter' || event.key === ' ')) {
+        if (interactive && (event.key === 'Enter' || event.key === ' ')) {
           event.preventDefault()
-          onOpenProject?.(slug)
+          openProject()
         }
       }}
       style={{
@@ -83,7 +98,13 @@ function WebsiteCover({ project, index, onOpenProject }) {
       <div className="website-cover-copy">
         <small>{category}</small>
         <strong>{title}</strong>
-        <span>{slug ? 'View one-page experience ↗' : 'One-page experience · Coming soon'}</span>
+        <span>
+          {externalUrl
+            ? 'Visit live site ↗'
+            : slug
+              ? 'View one-page experience ↗'
+              : 'One-page experience · Coming soon'}
+        </span>
       </div>
     </article>
   )
@@ -146,7 +167,7 @@ export default function WebsitesPage({ open, onClose, onOpenProject }) {
       <div className="websites-scroll">
         <header className="websites-hero">
           <img
-            src="/assets/websites/atlanta-skyline.webp"
+            src={WEBSITES_BACKGROUND_URL}
             alt="Atlanta skyline at sunset"
           />
 
