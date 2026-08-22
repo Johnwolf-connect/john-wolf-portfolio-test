@@ -15,20 +15,19 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Download approved website assets
+      - name: Download Froid cover
         run: |
           mkdir -p public/assets/websites
-          curl -L --fail --retry 3 -o public/assets/websites/froid-cover.png 'https://at.adobe.com/jTSLybLAKy3gjXwY'
-          curl -L --fail --retry 3 -o public/assets/websites/atlanta-background.png 'https://at.adobe.com/1aFhN861M1ZS1Usg'
+          curl -L --fail --retry 3 -o public/assets/websites/froid-cover.png 'https://at.adobe.com/6nJEwyk1nTG1V8qK'
 
-      - name: Commit imported assets
+      - name: Commit imported Froid cover
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add public/assets/websites/froid-cover.png public/assets/websites/atlanta-background.png
+          git add public/assets/websites/froid-cover.png
           if git diff --cached --quiet; then
-            echo 'Assets already current.'
+            echo 'Froid cover already current.'
           else
-            git commit -m 'Add Froid cover and Atlanta website background'
+            git commit -m 'Update Froid portfolio cover'
             git push
           fi
