@@ -5,10 +5,10 @@ import './WebsiteCoverOverrides.css'
 
 // Portfolio deployment sync marker: Nightfall + Froid website cards
 const FROID_SITE_URL = 'https://froid-clothing-platform-github-d98tx2k50.vercel.app/'
-const FROID_COVER_URL = 'https://at.adobe.com/jTSLybLAKy3gjXwY'
+const FROID_COVER_URL = '/assets/websites/froid-cover.png'
 const NIGHTFALL_SITE_URL = 'https://nightfall-unlocked-vercel-drop.vercel.app/'
 const NIGHTFALL_COVER_URL = 'https://at.adobe.com/SReDrxpeweBwgCfL'
-const WEBSITES_BACKGROUND_URL = 'https://at.adobe.com/1aFhN861M1ZS1Usg'
+const WEBSITES_BACKGROUND_URL = '/assets/websites/atlanta-background.png'
 
 const websiteCollections = [
   {
