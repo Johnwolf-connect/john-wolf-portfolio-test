@@ -20,14 +20,19 @@ jobs:
           mkdir -p public/assets/websites
           curl -L --fail --retry 3 -o public/assets/websites/froid-cover.png 'https://at.adobe.com/6nJEwyk1nTG1V8qK'
 
-      - name: Commit imported Froid cover
+      - name: Point portfolio to repository assets
+        run: |
+          sed -i "s#const FROID_COVER_URL = .*#const FROID_COVER_URL = '/assets/websites/froid-cover.png'#" src/components/WebsitesPage.jsx
+          sed -i "s#const WEBSITES_BACKGROUND_URL = .*#const WEBSITES_BACKGROUND_URL = '/assets/websites/atlanta-background.png'#" src/components/WebsitesPage.jsx
+
+      - name: Commit Froid cover fix
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add public/assets/websites/froid-cover.png
+          git add public/assets/websites/froid-cover.png src/components/WebsitesPage.jsx
           if git diff --cached --quiet; then
             echo 'Froid cover already current.'
           else
-            git commit -m 'Update Froid portfolio cover'
+            git commit -m 'Fix Froid portfolio cover'
             git push
           fi
