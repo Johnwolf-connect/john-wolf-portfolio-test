@@ -15,24 +15,25 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Download Froid cover
+      - name: Download portfolio covers
         run: |
           mkdir -p public/assets/websites
           curl -L --fail --retry 3 -o public/assets/websites/froid-cover.png 'https://at.adobe.com/6nJEwyk1nTG1V8qK'
+          curl -L --fail --retry 3 -o public/assets/websites/shaytax-cover.png 'https://at.adobe.com/QZ8DUjtRXx9JHoeP'
 
-      - name: Point portfolio to repository assets
+      - name: Keep permanent repository asset paths
         run: |
           sed -i "s#const FROID_COVER_URL = .*#const FROID_COVER_URL = '/assets/websites/froid-cover.png'#" src/components/WebsitesPage.jsx
           sed -i "s#const WEBSITES_BACKGROUND_URL = .*#const WEBSITES_BACKGROUND_URL = '/assets/websites/atlanta-background.png'#" src/components/WebsitesPage.jsx
 
-      - name: Commit Froid cover fix
+      - name: Commit imported covers
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add public/assets/websites/froid-cover.png src/components/WebsitesPage.jsx
+          git add public/assets/websites/froid-cover.png public/assets/websites/shaytax-cover.png src/components/WebsitesPage.jsx
           if git diff --cached --quiet; then
-            echo 'Froid cover already current.'
+            echo 'Portfolio covers already current.'
           else
-            git commit -m 'Fix Froid portfolio cover'
+            git commit -m 'Add ShayTax portfolio cover'
             git push
           fi
