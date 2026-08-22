@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import './WebsitesPage.css'
 import './WebsiteCoverOverrides.css'
 
+// Portfolio deployment sync marker: Nightfall + Froid website cards
 const FROID_SITE_URL = 'https://froid-clothing-platform-github-d98tx2k50.vercel.app/'
 const FROID_COVER_URL = 'https://at.adobe.com/jTSLybLAKy3gjXwY'
 const NIGHTFALL_SITE_URL = 'https://nightfall-unlocked-vercel-drop.vercel.app/'
