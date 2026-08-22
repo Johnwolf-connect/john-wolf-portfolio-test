@@ -26,14 +26,14 @@ jobs:
           sed -i "s#const FROID_COVER_URL = .*#const FROID_COVER_URL = '/assets/websites/froid-cover.png'#" src/components/WebsitesPage.jsx
           sed -i "s#const WEBSITES_BACKGROUND_URL = .*#const WEBSITES_BACKGROUND_URL = '/assets/websites/atlanta-background.png'#" src/components/WebsitesPage.jsx
 
-      - name: Commit imported covers
+      - name: Commit assets and trigger portfolio deployment
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add public/assets/websites/froid-cover.png public/assets/websites/shaytax-cover.png src/components/WebsitesPage.jsx
           if git diff --cached --quiet; then
-            echo 'Portfolio covers already current.'
+            git commit --allow-empty -m 'Deploy ShayTax portfolio entry'
           else
-            git commit -m 'Add ShayTax portfolio cover'
-            git push
+            git commit -m 'Refresh website portfolio assets'
           fi
+          git push
