@@ -5,6 +5,8 @@ import './WebsiteCoverOverrides.css'
 
 const FROID_SITE_URL = 'https://froid-clothing-platform-github-d98tx2k50.vercel.app/'
 const FROID_COVER_URL = 'https://at.adobe.com/jTSLybLAKy3gjXwY'
+const NIGHTFALL_SITE_URL = 'https://nightfall-unlocked-vercel-drop.vercel.app/'
+const NIGHTFALL_COVER_URL = 'https://at.adobe.com/SReDrxpeweBwgCfL'
 const WEBSITES_BACKGROUND_URL = 'https://at.adobe.com/1aFhN861M1ZS1Usg'
 
 const websiteCollections = [
@@ -14,7 +16,7 @@ const websiteCollections = [
     description: 'All one-page website experiences.',
     projects: [
       ['Froid', 'Playable', '#a9e4ff', '#102c64', 'froid', FROID_COVER_URL, FROID_SITE_URL],
-      ['Playable Site 01', 'Playable', '#ff8b4a', '#7c1d38'],
+      ['Nightfall', 'Playable', '#d94c5f', '#180b1a', 'nightfall', NIGHTFALL_COVER_URL, NIGHTFALL_SITE_URL],
       ['Designer Site 01', 'Designer', '#b58cff', '#321451'],
       ['Service Site 02', 'Service', '#71e0b4', '#103f43'],
       ['Playable Site 02', 'Playable', '#ffd35f', '#682e16'],
@@ -37,7 +39,7 @@ const websiteCollections = [
     description: 'Interactive experiences designed around motion, discovery, and play.',
     projects: [
       ['Froid', 'Playable', '#a9e4ff', '#102c64', 'froid', FROID_COVER_URL, FROID_SITE_URL],
-      ['Playable Site 02', 'Playable', '#ffd35f', '#682e16'],
+      ['Nightfall', 'Playable', '#d94c5f', '#180b1a', 'nightfall', NIGHTFALL_COVER_URL, NIGHTFALL_SITE_URL],
       ['Playable Site 03', 'Playable', '#74d8ff', '#18325f'],
     ],
   },
