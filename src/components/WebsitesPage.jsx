@@ -3,13 +3,15 @@ import { createPortal } from 'react-dom'
 import './WebsitesPage.css'
 import './WebsiteCoverOverrides.css'
 
-// Portfolio deployment sync marker: Nightfall + Froid + ShayTax website cards (production)
+// Portfolio deployment sync marker: Nightfall + Froid + ShayTax + 3 LowKee website cards (production)
 const FROID_SITE_URL = 'https://froid-clothing-platform-github-d98tx2k50.vercel.app/'
 const FROID_COVER_URL = '/assets/websites/froid-cover.png'
 const NIGHTFALL_SITE_URL = 'https://nightfall-unlocked-vercel-drop.vercel.app/'
 const NIGHTFALL_COVER_URL = 'https://at.adobe.com/SReDrxpeweBwgCfL'
 const SHAYTAX_SITE_URL = 'https://shaytaxdemo.vercel.app/'
 const SHAYTAX_COVER_URL = '/assets/websites/shaytax-cover.png'
+const LOWKEE_SITE_URL = 'https://lowkee-live.johnwolfvision14168.chatgpt.site/'
+const LOWKEE_COVER_URL = '/assets/websites/3lowkee-cover.png'
 const WEBSITES_BACKGROUND_URL = '/assets/websites/atlanta-background.png'
 
 const websiteCollections = [
@@ -21,6 +23,7 @@ const websiteCollections = [
       ['Froid', 'Playable', '#a9e4ff', '#102c64', 'froid', FROID_COVER_URL, FROID_SITE_URL],
       ['Nightfall', 'Playable', '#d94c5f', '#180b1a', 'nightfall', NIGHTFALL_COVER_URL, NIGHTFALL_SITE_URL],
       ['ShayTax', 'Service', '#3aa8ff', '#061735', null, SHAYTAX_COVER_URL, SHAYTAX_SITE_URL],
+      ['3 LowKee', 'Service', '#25f4ee', '#ef315f', null, LOWKEE_COVER_URL, LOWKEE_SITE_URL],
       ['Designer Site 01', 'Designer', '#b58cff', '#321451'],
       ['Service Site 02', 'Service', '#71e0b4', '#103f43'],
       ['Playable Site 02', 'Playable', '#ffd35f', '#682e16'],
@@ -33,6 +36,7 @@ const websiteCollections = [
     description: 'Conversion-focused sites built to explain, persuade, and connect.',
     projects: [
       ['ShayTax', 'Service', '#3aa8ff', '#061735', null, SHAYTAX_COVER_URL, SHAYTAX_SITE_URL],
+      ['3 LowKee', 'Service', '#25f4ee', '#ef315f', null, LOWKEE_COVER_URL, LOWKEE_SITE_URL],
       ['Service Site 01', 'Service', '#65d7ff', '#102c64'],
       ['Service Site 02', 'Service', '#71e0b4', '#103f43'],
       ['Service Site 03', 'Service', '#ffbd73', '#5b2c20'],
