@@ -7,11 +7,11 @@ import './WebsiteCoverOverrides.css'
 const FROID_SITE_URL = 'https://froid-clothing-platform-github-d98tx2k50.vercel.app/'
 const FROID_COVER_URL = '/assets/websites/froid-cover.png'
 const NIGHTFALL_SITE_URL = 'https://nightfall-unlocked-vercel-drop.vercel.app/'
-const NIGHTFALL_COVER_URL = 'https://at.adobe.com/SReDrxpeweBwgCfL'
+const NIGHTFALL_COVER_URL = '/assets/websites/nightfall-cover.jpg'
 const SHAYTAX_SITE_URL = 'https://shaytaxdemo.vercel.app/'
 const SHAYTAX_COVER_URL = '/assets/websites/shaytax-cover.png'
 const LOWKEE_SITE_URL = 'https://lowkee-live.johnwolfvision14168.chatgpt.site/'
-const LOWKEE_COVER_URL = '/assets/websites/3lowkee-cover.png'
+const LOWKEE_COVER_URL = '/assets/websites/3lowkee-cover.jpg'
 const WEBSITES_BACKGROUND_URL = '/assets/websites/atlanta-background.png'
 
 const websiteCollections = [
