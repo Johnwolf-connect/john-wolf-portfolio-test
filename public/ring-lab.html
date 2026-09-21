@@ -3000,91 +3000,55 @@
     }
 
     function drawContainTexture(image, title) {
+      // Preserve each logo image exactly as supplied:
+      // one uniform scale, centered, no crop, no blur,
+      // no dark overlay, and no independent width/height scaling.
       const width = 768
       const height = 1024
+      const inset = 18
+
       const output = document.createElement('canvas')
       output.width = width
       output.height = height
-      const context = output.getContext('2d')
 
-      context.fillStyle = '#09090d'
+      const context = output.getContext('2d')
+      context.fillStyle = '#ffffff'
       context.fillRect(0, 0, width, height)
 
       if (image?.naturalWidth && image?.naturalHeight) {
-        /*
-          Keep the original artwork readable.
-          The previous pass placed a 42% blurred copy behind the
-          artwork and then darkened the entire card again, which
-          crushed low-key logos into nearly black rectangles.
-        */
-        const coverScale = Math.max(
-          width / image.naturalWidth,
-          height / image.naturalHeight,
+        const scale = Math.min(
+          (width - inset * 2) / image.naturalWidth,
+          (height - inset * 2) / image.naturalHeight,
         )
-        const coverW =
-          image.naturalWidth * coverScale
-        const coverH =
-          image.naturalHeight * coverScale
 
-        context.save()
-        context.globalAlpha = 0.18
-        context.filter =
-          'blur(26px) saturate(1.06) brightness(1.08)'
-        context.drawImage(
-          image,
-          (width - coverW) / 2,
-          (height - coverH) / 2,
-          coverW,
-          coverH,
-        )
-        context.restore()
-
-        const inset = 18
-        const containScale = Math.min(
-          (width - inset * 2) /
-            image.naturalWidth,
-          (height - inset * 2) /
-            image.naturalHeight,
-        )
-        const drawW =
-          image.naturalWidth * containScale
-        const drawH =
-          image.naturalHeight * containScale
+        const drawWidth = image.naturalWidth * scale
+        const drawHeight = image.naturalHeight * scale
 
         context.drawImage(
           image,
-          (width - drawW) / 2,
-          (height - drawH) / 2,
-          drawW,
-          drawH,
+          (width - drawWidth) / 2,
+          (height - drawHeight) / 2,
+          drawWidth,
+          drawHeight,
         )
       } else {
-        context.fillStyle = '#16161d'
+        context.fillStyle = '#ffffff'
         context.fillRect(0, 0, width, height)
-        context.fillStyle = '#fff'
+        context.fillStyle = '#111111'
         context.textAlign = 'center'
         context.textBaseline = 'middle'
         context.font = '700 48px Arial'
-        context.fillText(
-          title,
-          width / 2,
-          height / 2,
-        )
+        context.fillText(title, width / 2, height / 2)
       }
 
-      const texture =
-        new THREE.CanvasTexture(output)
-
-      texture.colorSpace =
-        THREE.SRGBColorSpace
-      texture.anisotropy =
-        renderer.capabilities.getMaxAnisotropy()
-      texture.minFilter =
-        THREE.LinearMipmapLinearFilter
-      texture.magFilter =
-        THREE.LinearFilter
+      const texture = new THREE.CanvasTexture(output)
+      texture.colorSpace = THREE.SRGBColorSpace
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy()
+      texture.minFilter = THREE.LinearMipmapLinearFilter
+      texture.magFilter = THREE.LinearFilter
+      texture.wrapS = THREE.ClampToEdgeWrapping
+      texture.wrapT = THREE.ClampToEdgeWrapping
       texture.needsUpdate = true
-
       return texture
     }
 
