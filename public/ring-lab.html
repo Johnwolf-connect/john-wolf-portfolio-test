@@ -52,7 +52,7 @@
       filter:
         saturate(1.04)
         contrast(1.06)
-        brightness(0.64);
+        brightness(0.46);
 
       transform: scale(1.01);
     }
@@ -77,7 +77,7 @@
       z-index: 10;
       pointer-events: none;
       background:
-        linear-gradient(180deg, rgba(0,0,0,.24), transparent 16%, transparent 80%, rgba(0,0,0,.28)),
+        linear-gradient(180deg, rgba(0,0,0,.34), rgba(0,0,0,.08) 18%, rgba(0,0,0,.08) 78%, rgba(0,0,0,.38)),
         radial-gradient(circle at center, transparent 62%, rgba(0,0,0,.16));
     }
 
@@ -3007,99 +3007,176 @@
       output.height = height
       const context = output.getContext('2d')
 
-      context.fillStyle = '#0b0b18'
+      context.fillStyle = '#09090d'
       context.fillRect(0, 0, width, height)
 
       if (image?.naturalWidth && image?.naturalHeight) {
-        const coverScale = Math.max(width / image.naturalWidth, height / image.naturalHeight)
-        const coverW = image.naturalWidth * coverScale
-        const coverH = image.naturalHeight * coverScale
+        /*
+          Keep the original artwork readable.
+          The previous pass placed a 42% blurred copy behind the
+          artwork and then darkened the entire card again, which
+          crushed low-key logos into nearly black rectangles.
+        */
+        const coverScale = Math.max(
+          width / image.naturalWidth,
+          height / image.naturalHeight,
+        )
+        const coverW =
+          image.naturalWidth * coverScale
+        const coverH =
+          image.naturalHeight * coverScale
 
         context.save()
-        context.globalAlpha = 0.42
-        context.filter = 'blur(34px) saturate(1.18)'
-        context.drawImage(image, (width - coverW) / 2, (height - coverH) / 2, coverW, coverH)
+        context.globalAlpha = 0.18
+        context.filter =
+          'blur(26px) saturate(1.06) brightness(1.08)'
+        context.drawImage(
+          image,
+          (width - coverW) / 2,
+          (height - coverH) / 2,
+          coverW,
+          coverH,
+        )
         context.restore()
 
-        context.fillStyle = 'rgba(5, 5, 14, 0.46)'
-        context.fillRect(0, 0, width, height)
+        const inset = 18
+        const containScale = Math.min(
+          (width - inset * 2) /
+            image.naturalWidth,
+          (height - inset * 2) /
+            image.naturalHeight,
+        )
+        const drawW =
+          image.naturalWidth * containScale
+        const drawH =
+          image.naturalHeight * containScale
 
-        const inset = 44
-        const containScale = Math.min((width - inset * 2) / image.naturalWidth, (height - inset * 2) / image.naturalHeight)
-        const drawW = image.naturalWidth * containScale
-        const drawH = image.naturalHeight * containScale
-
-        context.fillStyle = 'rgba(0, 0, 0, 0.18)'
-        context.fillRect((width - drawW) / 2 - 8, (height - drawH) / 2 - 8, drawW + 16, drawH + 16)
-        context.drawImage(image, (width - drawW) / 2, (height - drawH) / 2, drawW, drawH)
+        context.drawImage(
+          image,
+          (width - drawW) / 2,
+          (height - drawH) / 2,
+          drawW,
+          drawH,
+        )
       } else {
-        context.fillStyle = '#1500e1'
+        context.fillStyle = '#16161d'
         context.fillRect(0, 0, width, height)
         context.fillStyle = '#fff'
         context.textAlign = 'center'
         context.textBaseline = 'middle'
         context.font = '700 48px Arial'
-        context.fillText(title, width / 2, height / 2)
+        context.fillText(
+          title,
+          width / 2,
+          height / 2,
+        )
       }
 
-      const texture = new THREE.CanvasTexture(output)
-      texture.colorSpace = THREE.SRGBColorSpace
-      texture.anisotropy = renderer.capabilities.getMaxAnisotropy()
-      texture.minFilter = THREE.LinearMipmapLinearFilter
-      texture.magFilter = THREE.LinearFilter
+      const texture =
+        new THREE.CanvasTexture(output)
+
+      texture.colorSpace =
+        THREE.SRGBColorSpace
+      texture.anisotropy =
+        renderer.capabilities.getMaxAnisotropy()
+      texture.minFilter =
+        THREE.LinearMipmapLinearFilter
+      texture.magFilter =
+        THREE.LinearFilter
       texture.needsUpdate = true
+
       return texture
     }
 
 
     function drawIpadTexture(image) {
-      const width = 1000
-      const height = 1600
-      const inset = 44
+      /*
+        Match the actual GLTF screen geometry:
+        0.5522 wide x 0.73035 high = ~0.756:1.
+        The old 1000 x 1600 texture was too narrow and
+        therefore stretched when mapped to the iPad screen.
+      */
+      const width = 1512
+      const height = 2000
+      const inset = 64
 
-      const output = document.createElement('canvas')
+      const output =
+        document.createElement('canvas')
+
       output.width = width
       output.height = height
 
-      const context = output.getContext('2d')
+      const context =
+        output.getContext('2d')
+
       context.fillStyle = '#ffffff'
-      context.fillRect(0, 0, width, height)
+      context.fillRect(
+        0,
+        0,
+        width,
+        height,
+      )
 
-      if (image?.naturalWidth && image?.naturalHeight) {
-        const availableWidth = height - inset * 2
-        const availableHeight = width - inset * 2
-        const containScale = Math.min(
-          availableWidth / image.naturalWidth,
-          availableHeight / image.naturalHeight,
-        )
-        const drawWidth = image.naturalWidth * containScale
-        const drawHeight = image.naturalHeight * containScale
+      if (
+        image?.naturalWidth &&
+        image?.naturalHeight
+      ) {
+        const availableWidth =
+          width - inset * 2
 
-        context.save()
-        context.translate(width / 2, height / 2)
-        context.rotate(-Math.PI / 2)
-        context.scale(-1, 1)
+        const availableHeight =
+          height - inset * 2
+
+        const containScale =
+          Math.min(
+            availableWidth /
+              image.naturalWidth,
+            availableHeight /
+              image.naturalHeight,
+          )
+
+        const drawWidth =
+          image.naturalWidth *
+          containScale
+
+        const drawHeight =
+          image.naturalHeight *
+          containScale
+
+        /*
+          Preserve the artwork exactly as supplied.
+          No forced 90-degree rotation and no horizontal
+          mirroring. The device itself is kept portrait,
+          so the logo stays upright and proportional.
+        */
         context.drawImage(
           image,
-          -drawWidth / 2,
-          -drawHeight / 2,
+          (width - drawWidth) / 2,
+          (height - drawHeight) / 2,
           drawWidth,
           drawHeight,
         )
-        context.restore()
       }
 
-      const texture = new THREE.CanvasTexture(output)
-      texture.colorSpace = THREE.SRGBColorSpace
-      texture.anisotropy = renderer.capabilities.getMaxAnisotropy()
-      texture.minFilter = THREE.LinearMipmapLinearFilter
-      texture.magFilter = THREE.LinearFilter
-      texture.wrapS = THREE.ClampToEdgeWrapping
-      texture.wrapT = THREE.ClampToEdgeWrapping
+      const texture =
+        new THREE.CanvasTexture(output)
+
+      texture.colorSpace =
+        THREE.SRGBColorSpace
+      texture.anisotropy =
+        renderer.capabilities.getMaxAnisotropy()
+      texture.minFilter =
+        THREE.LinearMipmapLinearFilter
+      texture.magFilter =
+        THREE.LinearFilter
+      texture.wrapS =
+        THREE.ClampToEdgeWrapping
+      texture.wrapT =
+        THREE.ClampToEdgeWrapping
       texture.needsUpdate = true
+
       return texture
     }
-
     function loadImage(source) {
       return new Promise((resolve) => {
         const image = new Image()
@@ -3141,7 +3218,7 @@
         float yn = (uv.y - 0.5) * 2.0;
         float horizontalShape = mix(0.58, 1.0, 1.0 - xn * xn);
         float verticalShape = mix(0.58, 1.0, 1.0 - yn * yn);
-        float wave = sin((uv.x * 5.0 + uv.y * 3.0) + uTime * 0.65) * 0.012;
+        float wave = sin((uv.x * 5.0 + uv.y * 3.0) + uTime * 0.65) * 0.003;
         transformed.z += horizontalShape * uBendH;
         transformed.z += verticalShape * uBendV;
         transformed.z += wave;
@@ -3383,22 +3460,39 @@
         const upright = new THREE.Group()
         upright.rotation.x = -Math.PI / 2
         upright.add(model)
+        upright.updateMatrixWorld(true)
 
-        const landscape = new THREE.Group()
-        landscape.rotation.z = Math.PI / 2
-        landscape.add(upright)
-        landscape.updateMatrixWorld(true)
+        const orientedBox =
+          new THREE.Box3().setFromObject(
+            upright,
+          )
 
-        const orientedBox = new THREE.Box3().setFromObject(landscape)
-        const orientedCenter = orientedBox.getCenter(new THREE.Vector3())
-        landscape.position.sub(orientedCenter)
-        landscape.updateMatrixWorld(true)
+        const orientedCenter =
+          orientedBox.getCenter(
+            new THREE.Vector3(),
+          )
 
-        const orientedSize = new THREE.Box3().setFromObject(landscape).getSize(new THREE.Vector3())
-        const scale = config.modelSize / Math.max(orientedSize.x, orientedSize.y, orientedSize.z)
-        landscape.scale.setScalar(scale)
+        upright.position.sub(
+          orientedCenter,
+        )
+        upright.updateMatrixWorld(true)
 
-        return landscape
+        const orientedSize =
+          new THREE.Box3()
+            .setFromObject(upright)
+            .getSize(new THREE.Vector3())
+
+        const scale =
+          config.modelSize /
+          Math.max(
+            orientedSize.x,
+            orientedSize.y,
+            orientedSize.z,
+          )
+
+        upright.scale.setScalar(scale)
+
+        return upright
       } catch (error) {
         console.warn('iPad model could not load; using procedural fallback.', error)
         return createFallbackTablet()
@@ -3759,8 +3853,8 @@
         row.position.y = wrap(row.userData.baseY + currentVertical, -half, half)
       })
 
-      const bendH = clamp(rotationVelocity * 12.5, -0.34, 0.34)
-      const bendV = clamp(verticalVelocity * 0.16, -0.22, 0.22)
+      const bendH = clamp(rotationVelocity * 5.5, -0.09, 0.09)
+      const bendV = clamp(verticalVelocity * 0.08, -0.06, 0.06)
       panelMeshes.forEach((mesh) => {
         mesh.material.uniforms.uBendH.value += (bendH - mesh.material.uniforms.uBendH.value) * 0.12
         mesh.material.uniforms.uBendV.value += (bendV - mesh.material.uniforms.uBendV.value) * 0.12
@@ -3770,7 +3864,7 @@
       if (modelPivot) {
         modelPivot.rotation.y = -currentRotation * 2
         modelPivot.rotation.x = 0.08 - pointerY * 0.035
-        modelPivot.rotation.z = -0.18 + Math.sin(time * 0.75) * 0.035
+        modelPivot.rotation.z = -0.04 + Math.sin(time * 0.75) * 0.018
         modelPivot.position.y = Math.sin(time * 0.82) * 0.12
         modelPivot.position.x = pointerX * 0.12
       }
