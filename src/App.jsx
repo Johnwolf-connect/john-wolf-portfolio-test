@@ -126,17 +126,6 @@ const brandGuidelineProjects = [
       '/assets/brand-guidelines/projects/chick-muy-caliente-brand-guidelines.pdf',
     pages: 17,
   },
-  {
-    title: 'Bellora Design Studio',
-    category: 'Luxury interior identity',
-    description:
-      'A refined identity presentation featuring logo direction, an alternative mark, color palette, and typography for an elevated interior design studio.',
-    image:
-      '/assets/brand-guidelines/projects/bellora-design-studio-cover.jpg',
-    pdf:
-      '/assets/brand-guidelines/projects/bellora-design-studio-brand-guidelines.pdf',
-    pages: 5,
-  },
 ]
 
 function getBrandProjectOffset(index, activeIndex, total) {
