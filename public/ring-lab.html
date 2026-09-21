@@ -3090,8 +3090,10 @@
 
 
     function drawIpadTexture(image) {
-      const width = 1000
-      const height = 1600
+      // The iPad screen is displayed landscape.
+      // Keep the source artwork's aspect ratio and only center it.
+      const width = 1600
+      const height = 1000
       const inset = 44
 
       const output = document.createElement('canvas')
@@ -3103,27 +3105,23 @@
       context.fillRect(0, 0, width, height)
 
       if (image?.naturalWidth && image?.naturalHeight) {
-        const availableWidth = height - inset * 2
-        const availableHeight = width - inset * 2
-        const containScale = Math.min(
+        const availableWidth = width - inset * 2
+        const availableHeight = height - inset * 2
+        const scale = Math.min(
           availableWidth / image.naturalWidth,
           availableHeight / image.naturalHeight,
         )
-        const drawWidth = image.naturalWidth * containScale
-        const drawHeight = image.naturalHeight * containScale
 
-        context.save()
-        context.translate(width / 2, height / 2)
-        context.rotate(-Math.PI / 2)
-        context.scale(-1, 1)
+        const drawWidth = image.naturalWidth * scale
+        const drawHeight = image.naturalHeight * scale
+
         context.drawImage(
           image,
-          -drawWidth / 2,
-          -drawHeight / 2,
+          (width - drawWidth) / 2,
+          (height - drawHeight) / 2,
           drawWidth,
           drawHeight,
         )
-        context.restore()
       }
 
       const texture = new THREE.CanvasTexture(output)
