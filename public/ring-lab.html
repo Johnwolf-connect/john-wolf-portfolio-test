@@ -3090,93 +3090,53 @@
 
 
     function drawIpadTexture(image) {
-      /*
-        Match the actual GLTF screen geometry:
-        0.5522 wide x 0.73035 high = ~0.756:1.
-        The old 1000 x 1600 texture was too narrow and
-        therefore stretched when mapped to the iPad screen.
-      */
-      const width = 1512
-      const height = 2000
-      const inset = 64
+      const width = 1000
+      const height = 1600
+      const inset = 44
 
-      const output =
-        document.createElement('canvas')
-
+      const output = document.createElement('canvas')
       output.width = width
       output.height = height
 
-      const context =
-        output.getContext('2d')
-
+      const context = output.getContext('2d')
       context.fillStyle = '#ffffff'
-      context.fillRect(
-        0,
-        0,
-        width,
-        height,
-      )
+      context.fillRect(0, 0, width, height)
 
-      if (
-        image?.naturalWidth &&
-        image?.naturalHeight
-      ) {
-        const availableWidth =
-          width - inset * 2
+      if (image?.naturalWidth && image?.naturalHeight) {
+        const availableWidth = height - inset * 2
+        const availableHeight = width - inset * 2
+        const containScale = Math.min(
+          availableWidth / image.naturalWidth,
+          availableHeight / image.naturalHeight,
+        )
+        const drawWidth = image.naturalWidth * containScale
+        const drawHeight = image.naturalHeight * containScale
 
-        const availableHeight =
-          height - inset * 2
-
-        const containScale =
-          Math.min(
-            availableWidth /
-              image.naturalWidth,
-            availableHeight /
-              image.naturalHeight,
-          )
-
-        const drawWidth =
-          image.naturalWidth *
-          containScale
-
-        const drawHeight =
-          image.naturalHeight *
-          containScale
-
-        /*
-          Preserve the artwork exactly as supplied.
-          No forced 90-degree rotation and no horizontal
-          mirroring. The device itself is kept portrait,
-          so the logo stays upright and proportional.
-        */
+        context.save()
+        context.translate(width / 2, height / 2)
+        context.rotate(-Math.PI / 2)
+        context.scale(-1, 1)
         context.drawImage(
           image,
-          (width - drawWidth) / 2,
-          (height - drawHeight) / 2,
+          -drawWidth / 2,
+          -drawHeight / 2,
           drawWidth,
           drawHeight,
         )
+        context.restore()
       }
 
-      const texture =
-        new THREE.CanvasTexture(output)
-
-      texture.colorSpace =
-        THREE.SRGBColorSpace
-      texture.anisotropy =
-        renderer.capabilities.getMaxAnisotropy()
-      texture.minFilter =
-        THREE.LinearMipmapLinearFilter
-      texture.magFilter =
-        THREE.LinearFilter
-      texture.wrapS =
-        THREE.ClampToEdgeWrapping
-      texture.wrapT =
-        THREE.ClampToEdgeWrapping
+      const texture = new THREE.CanvasTexture(output)
+      texture.colorSpace = THREE.SRGBColorSpace
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy()
+      texture.minFilter = THREE.LinearMipmapLinearFilter
+      texture.magFilter = THREE.LinearFilter
+      texture.wrapS = THREE.ClampToEdgeWrapping
+      texture.wrapT = THREE.ClampToEdgeWrapping
       texture.needsUpdate = true
-
       return texture
     }
+
     function loadImage(source) {
       return new Promise((resolve) => {
         const image = new Image()
