@@ -52,7 +52,7 @@
       filter:
         saturate(1.04)
         contrast(1.06)
-        brightness(0.38);
+        brightness(0.46);
 
       transform: scale(1.01);
     }
@@ -945,7 +945,7 @@
       rel="noreferrer"
     >iPad model: DatSketch · CC BY-NC 4.0</a>
 
-    <div class="loading" id="loading"><span>Building the logo gallery</span></div>
+    <div class="loading" id="loading"><span>Building the five-ring gallery</span></div>
 
     <div
       class="logo-detail-backdrop"
@@ -1208,8 +1208,8 @@
 }
 
     const TAU = Math.PI * 2
-    const ROW_COUNT = 4
-    const PANELS_PER_ROW = 8
+    const ROW_COUNT = 5
+    const PANELS_PER_ROW = 12
 
     const canvas = document.getElementById('ringsCanvas')
     const loading = document.getElementById('loading')
@@ -2919,14 +2919,14 @@
       if (mobileLandscape) {
         return {
           fov: 50,
-          cameraZ: 13.8,
-          radius: 8.25,
-          panelW: 1.58,
-          panelH: 2.12,
-          rowSpacing: 3.15,
+          cameraZ: 13,
+          radius: 7.8,
+          panelW: 1.54,
+          panelH: 2.09,
+          rowSpacing: 7,
           gridRadius: 34,
-          gridHalfHeight: 18,
-          modelSize: 3.15,
+          gridHalfHeight: 22,
+          modelSize: 4.1,
         }
       }
 
@@ -2937,10 +2937,10 @@
           radius: 4.5,
           panelW: 1.1,
           panelH: 1.54,
-          rowSpacing: 2.75,
+          rowSpacing: 5.5,
           gridRadius: 30,
-          gridHalfHeight: 18,
-          modelSize: 2.35,
+          gridHalfHeight: 30,
+          modelSize: 2.7,
         }
       }
 
@@ -2951,10 +2951,10 @@
           radius: 4.6,
           panelW: 1.1,
           panelH: 1.54,
-          rowSpacing: 2.85,
+          rowSpacing: 3.8,
           gridRadius: 30,
-          gridHalfHeight: 18,
-          modelSize: 2.45,
+          gridHalfHeight: 30,
+          modelSize: 3.0,
         }
       }
 
@@ -2965,10 +2965,10 @@
           radius: 5.5,
           panelW: 1.1,
           panelH: 1.54,
-          rowSpacing: 3.0,
+          rowSpacing: 6.5,
           gridRadius: 30,
-          gridHalfHeight: 18,
-          modelSize: 2.6,
+          gridHalfHeight: 30,
+          modelSize: 3.2,
         }
       }
 
@@ -2979,23 +2979,23 @@
           radius: 6.5,
           panelW: 1.32,
           panelH: 1.76,
-          rowSpacing: 3.05,
+          rowSpacing: 4,
           gridRadius: 34,
-          gridHalfHeight: 18,
-          modelSize: 2.9,
+          gridHalfHeight: 22,
+          modelSize: 3.7,
         }
       }
 
       return {
         fov: 50,
-        cameraZ: 13.8,
-        radius: 8.25,
-        panelW: 1.58,
-        panelH: 2.12,
-        rowSpacing: 3.15,
+        cameraZ: 13,
+        radius: 7.8,
+        panelW: 1.54,
+        panelH: 2.09,
+        rowSpacing: 7,
         gridRadius: 34,
-        gridHalfHeight: 18,
-        modelSize: 3.15,
+        gridHalfHeight: 22,
+        modelSize: 4.1,
       }
     }
 
@@ -3039,7 +3039,7 @@
         )
         context.restore()
 
-        const inset = 8
+        const inset = 18
         const containScale = Math.min(
           (width - inset * 2) /
             image.naturalWidth,
@@ -3248,7 +3248,7 @@
         },
         vertexShader: panelVertexShader,
         fragmentShader: panelFragmentShader,
-        side: THREE.FrontSide,
+        side: THREE.DoubleSide,
         transparent: false,
         depthTest: true,
         depthWrite: true,
@@ -3344,30 +3344,34 @@
         rowGroups.push(rowGroup)
 
         for (let panelIndex = 0; panelIndex < PANELS_PER_ROW; panelIndex += 1) {
-          const sourceIndex =
+          const flatPanelIndex =
             rowIndex * PANELS_PER_ROW +
             panelIndex
 
-          const source =
-            sources[sourceIndex]
-
-          if (!source) {
-            continue
-          }
+          let sourceIndex =
+            flatPanelIndex %
+            sources.length
 
           /*
-            Four rings x eight cards = the 32 unique logo
-            projects. No repeated filler positions.
+            There are 60 cylinder positions, so the logo
+            source list repeats during the second cycle.
+            Keep Big Dawg card 04 only in its first position.
           */
-          const angle =
-            (
-              (
-                panelIndex +
-                rowIndex * 0.5
-              ) /
-              PANELS_PER_ROW
-            ) *
-            TAU
+          const isRepeatedBigDawg =
+            flatPanelIndex >= sources.length &&
+            /\/logo-card-04\.(?:png|jpg|jpeg)$/i.test(
+              sources[sourceIndex].src,
+            )
+
+          if (isRepeatedBigDawg) {
+            sourceIndex =
+              (sourceIndex + 1) %
+              sources.length
+          }
+
+          const source =
+            sources[sourceIndex]
+          const angle = ((panelIndex + rowIndex * 0.5) / PANELS_PER_ROW) * TAU
           const geometry = new THREE.PlaneGeometry(1, 1, 12, 8)
           const material = createPanelMaterial(textureCache.get(source.src))
           const mesh = new THREE.Mesh(geometry, material)
@@ -3858,11 +3862,11 @@
       })
 
       if (modelPivot) {
-        modelPivot.rotation.y = -currentRotation * 0.08 + Math.sin(time * 0.35) * 0.025
-        modelPivot.rotation.x = 0.025 - pointerY * 0.012
-        modelPivot.rotation.z = Math.sin(time * 0.55) * 0.008
-        modelPivot.position.y = Math.sin(time * 0.82) * 0.055
-        modelPivot.position.x = pointerX * 0.045
+        modelPivot.rotation.y = -currentRotation * 2
+        modelPivot.rotation.x = 0.08 - pointerY * 0.035
+        modelPivot.rotation.z = -0.04 + Math.sin(time * 0.75) * 0.018
+        modelPivot.position.y = Math.sin(time * 0.82) * 0.12
+        modelPivot.position.x = pointerX * 0.12
       }
 
       camera.position.x = pointerX * 0.18
