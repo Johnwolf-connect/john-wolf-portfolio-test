@@ -25,11 +25,6 @@ const brandThemes = {
     glow: '#a42d1d',
     surface: '#1b0b08',
   },
-  'Bellora Design Studio': {
-    accent: '#dbc8a4',
-    glow: '#806a47',
-    surface: '#17130d',
-  },
 }
 
 function clamp(value, minimum, maximum) {
