@@ -1057,7 +1057,7 @@ export default function App() {
 
   useEffect(() => {
     const videos = Array.from(
-      root.current?.querySelectorAll('video[loop]') ?? [],
+      document.querySelectorAll('video[loop]'),
     )
 
     if (!videos.length) return undefined
@@ -1207,7 +1207,7 @@ export default function App() {
         resumeVisibleLoops,
       )
     }
-  }, [])
+  }, [brandPageOpen])
 
   useEffect(() => {
     const source = heroVideo.current
