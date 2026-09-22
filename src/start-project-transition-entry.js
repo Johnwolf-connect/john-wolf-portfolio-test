@@ -1,9 +1,9 @@
 import * as THREE from 'three'
-import { OBJLoader } from 'three/addons/loaders/OBJLoader.js'
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { initStartProjectTransition } from './start-project-transition-core.js'
 
 try {
-  initStartProjectTransition({ THREE, OBJLoader })
+  initStartProjectTransition({ THREE, GLTFLoader })
 } catch (error) {
   // Keep the portfolio usable on browsers or devices where WebGL is
   // unavailable. The 3D Start a Project transition is an enhancement,
