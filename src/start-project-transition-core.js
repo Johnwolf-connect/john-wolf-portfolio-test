@@ -1,6 +1,6 @@
 const STYLE_ID = 'start-project-transition-styles'
 const STAGE_ID = 'start-project-transition-stage'
-const MODEL_URL = '/assets/start-project/macbook/macbook-pro-2020.obj'
+const MODEL_URL = '/assets/start-project/macbook/macbook-ultra.glb'
 const VIDEO_URL = '/assets/start-project/environment.mp4'
 const ROCK_URL = '/assets/start-project/black-stone.png'
 
@@ -336,110 +336,6 @@ function createLivePageLayer() {
   }
 }
 
-function createMaterials(THREE) {
-  return {
-    shell: new THREE.MeshPhysicalMaterial({
-      color: 0xb8bcc3,
-      metalness: 0.92,
-      roughness: 0.27,
-      clearcoat: 0.45,
-      clearcoatRoughness: 0.22,
-    }),
-    dark: new THREE.MeshStandardMaterial({
-      color: 0x08090b,
-      metalness: 0.25,
-      roughness: 0.42,
-    }),
-    keyboard: new THREE.MeshStandardMaterial({
-      color: 0x111318,
-      metalness: 0.12,
-      roughness: 0.52,
-    }),
-    trackpad: new THREE.MeshPhysicalMaterial({
-      color: 0x9ea3aa,
-      metalness: 0.72,
-      roughness: 0.32,
-    }),
-    hinge: new THREE.MeshStandardMaterial({
-      color: 0x17191d,
-      metalness: 0.68,
-      roughness: 0.36,
-    }),
-  }
-}
-
-function materialForMesh(mesh, materials) {
-  const name = mesh.name || ''
-
-  if (name === 'Rectangle004') return materials.dark
-  if (name === 'Object026' || name === 'Object027' || name === 'Object028') {
-    return materials.keyboard
-  }
-  if (name === 'Object025') return materials.trackpad
-  if (name === 'Cylinder007' || name === 'Plane006') return materials.hinge
-  return materials.shell
-}
-
-
-function createLaptopBase(THREE, materials) {
-  const hinge = new THREE.Group()
-  hinge.name = 'RestoredMacBookBase'
-  hinge.position.set(0, -116, 2)
-  hinge.rotation.x = 1.08
-
-  const deck = new THREE.Mesh(
-    new THREE.BoxGeometry(350, 10, 226),
-    materials.shell,
-  )
-  deck.position.set(0, -5, 108)
-  deck.castShadow = true
-  deck.receiveShadow = true
-  hinge.add(deck)
-
-  const keyboardWell = new THREE.Mesh(
-    new THREE.BoxGeometry(272, 2.8, 104),
-    materials.dark,
-  )
-  keyboardWell.position.set(0, 1.4, 76)
-  keyboardWell.castShadow = true
-  keyboardWell.receiveShadow = true
-  hinge.add(keyboardWell)
-
-  const keyboard = new THREE.Mesh(
-    new THREE.BoxGeometry(252, 2, 88),
-    materials.keyboard,
-  )
-  keyboard.position.set(0, 3.1, 74)
-  keyboard.castShadow = true
-  hinge.add(keyboard)
-
-  const trackpad = new THREE.Mesh(
-    new THREE.BoxGeometry(132, 1.8, 72),
-    materials.trackpad,
-  )
-  trackpad.position.set(0, 3.2, 158)
-  trackpad.castShadow = true
-  hinge.add(trackpad)
-
-  const hingeBar = new THREE.Mesh(
-    new THREE.CylinderGeometry(5.2, 5.2, 292, 28),
-    materials.hinge,
-  )
-  hingeBar.rotation.z = Math.PI / 2
-  hingeBar.position.set(0, 0, 4)
-  hingeBar.castShadow = true
-  hinge.add(hingeBar)
-
-  const frontLip = new THREE.Mesh(
-    new THREE.BoxGeometry(118, 3, 5),
-    materials.dark,
-  )
-  frontLip.position.set(0, -0.5, 222)
-  hinge.add(frontLip)
-
-  return hinge
-}
-
 function getSceneLayout(camera, screenWidth) {
   const viewportWidth = window.innerWidth
   const viewportHeight = window.innerHeight
@@ -474,7 +370,7 @@ function getSceneLayout(camera, screenWidth) {
   }
 }
 
-export function initStartProjectTransition({ THREE, OBJLoader }) {
+export function initStartProjectTransition({ THREE, GLTFLoader }) {
   if (window.__johnWolfStartProjectTransition) {
     return window.__johnWolfStartProjectTransition
   }
@@ -534,23 +430,30 @@ export function initStartProjectTransition({ THREE, OBJLoader }) {
   let modelLoaded = false
   let modelLoadFailed = false
 
-  const materials = createMaterials(THREE)
-  const restoredBase = createLaptopBase(THREE, materials)
-  laptopRoot.add(restoredBase)
+  let screenNode = null
+  const loader = new GLTFLoader()
 
-  const loader = new OBJLoader()
   const modelReady = new Promise((resolve) => {
     loader.load(
       MODEL_URL,
-      (model) => {
+      (gltf) => {
+        const model = gltf.scene
+        screenNode = model.getObjectByName('Lid')
+
         model.traverse((child) => {
           if (!child.isMesh) return
-          child.material = materialForMesh(child, materials)
           child.castShadow = true
           child.receiveShadow = true
         })
 
-        model.position.set(0, -3.8512, 120.62065)
+        /*
+          The uploaded MacBook Ultra model is authored in meters.
+          Scale and offset it so its LCD occupies the same transition
+          screen footprint the effect was designed around.
+        */
+        model.scale.setScalar(880)
+        model.position.set(0, -111, 110.5)
+
         laptopRoot.add(model)
         modelLoaded = true
         resolve(model)
@@ -558,7 +461,10 @@ export function initStartProjectTransition({ THREE, OBJLoader }) {
       undefined,
       (error) => {
         modelLoadFailed = true
-        console.error('The Start a Project MacBook model could not load.', error)
+        console.error(
+          'The uploaded MacBook Ultra model could not load.',
+          error,
+        )
         resolve(null)
       },
     )
@@ -572,22 +478,41 @@ export function initStartProjectTransition({ THREE, OBJLoader }) {
   }
 
   function getScreenCorners() {
-    const halfWidth = screenWidth / 2
-    const halfHeight = layout.screenHeight / 2
+    if (!screenNode) {
+      const halfWidth = screenWidth / 2
+      const halfHeight = layout.screenHeight / 2
+
+      return [
+        new THREE.Vector3(-halfWidth, halfHeight, 0),
+        new THREE.Vector3(halfWidth, halfHeight, 0),
+        new THREE.Vector3(halfWidth, -halfHeight, 0),
+        new THREE.Vector3(-halfWidth, -halfHeight, 0),
+      ].map((corner) =>
+        laptopRoot.localToWorld(corner),
+      )
+    }
+
+    const left = -0.17573646
+    const right = 0.17573646
+    const bottom = 0.01373661
+    const top = 0.24269208
+    const surface = 0.00515
 
     return [
-      new THREE.Vector3(-halfWidth, halfHeight, 0),
-      new THREE.Vector3(halfWidth, halfHeight, 0),
-      new THREE.Vector3(halfWidth, -halfHeight, 0),
-      new THREE.Vector3(-halfWidth, -halfHeight, 0),
-    ]
+      new THREE.Vector3(left, surface, top),
+      new THREE.Vector3(right, surface, top),
+      new THREE.Vector3(right, surface, bottom),
+      new THREE.Vector3(left, surface, bottom),
+    ].map((corner) =>
+      screenNode.localToWorld(corner),
+    )
   }
 
   function projectLivePage() {
     if (!livePage) return
 
     const projected = getScreenCorners().map((corner) => {
-      const point = laptopRoot.localToWorld(corner.clone()).project(camera)
+      const point = corner.clone().project(camera)
       return [
         (point.x * 0.5 + 0.5) * layout.viewportWidth,
         (-point.y * 0.5 + 0.5) * layout.viewportHeight,
