@@ -688,7 +688,6 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
     stage.classList.add('is-active')
     stage.setAttribute('aria-hidden', 'false')
     stage.scrollTop = 0
-    video.dataset.shouldPlay = 'true'
     video.currentTime = 0
     video.play().catch(() => {})
 
@@ -758,7 +757,6 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
       'is-settled',
     )
     stage.setAttribute('aria-hidden', 'true')
-    video.dataset.shouldPlay = 'false'
     video.pause()
     video.currentTime = 0
     cancelAnimationFrame(animationFrame)
