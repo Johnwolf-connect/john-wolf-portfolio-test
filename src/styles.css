@@ -2222,100 +2222,73 @@ body::-webkit-scrollbar,
 }
 
 
-/* ===== SECTION 2 / HORIZONTAL DRAG + SWIPE ARCHIVE ===== */
-.archive-drag-stage {
-  --drag-x: 0px;
+/* ===== SECTION 2 / SEAMLESS GSAP PLAYHEAD CAROUSEL ===== */
+.archive-seamless-stage {
   position: absolute;
   inset: 0;
-  display: block;
   overflow: hidden;
-  perspective: 1200px;
   cursor: grab;
-  touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
+  touch-action: pan-y;
 }
 
-.archive-drag-stage.is-dragging {
+.archive-seamless-stage.is-dragging {
   cursor: grabbing;
 }
 
-.archive-drag-track {
+.archive-drag-proxy {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  left: 50%;
+  top: 50%;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.archive-seamless-track {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
-  transform-style: preserve-3d;
+  overflow: visible;
 }
 
-.archive-drag-card {
+.archive-seamless-card {
   position: absolute;
   inset: auto;
   left: 50%;
   top: 50%;
-  width: clamp(240px, 25vw, 360px);
+  width: clamp(235px, 25vw, 365px);
   height: auto;
-  aspect-ratio: 0.725;
-  transform:
-    translate3d(
-      calc(
-        -50% +
-        (var(--archive-offset) * clamp(175px, 24vw, 330px)) +
-        var(--drag-x)
-      ),
-      -50%,
-      calc(var(--archive-distance) * -72px)
-    )
-    rotateY(calc(var(--archive-offset) * -8deg))
-    scale(calc(1 - (var(--archive-distance) * 0.16)));
+  aspect-ratio: .725;
+  margin: 0;
+  transform: translate(-50%, -50%);
   transform-origin: 50% 50%;
-  opacity: calc(1 - (var(--archive-distance) * 0.19));
-  filter:
-    saturate(calc(1.05 - (var(--archive-distance) * 0.12)))
-    brightness(calc(1 - (var(--archive-distance) * 0.13)));
-  transition:
-    transform 560ms cubic-bezier(.2,.75,.2,1),
-    opacity 420ms ease,
-    filter 420ms ease,
-    border-color 260ms ease,
-    box-shadow 260ms ease;
   will-change: transform, opacity;
   backface-visibility: hidden;
   pointer-events: auto;
+  filter: saturate(.98) brightness(.92);
 }
 
-.archive-drag-stage.is-dragging .archive-drag-card {
-  transition:
-    opacity 180ms ease,
-    filter 180ms ease;
-}
-
-.archive-drag-card.is-active {
-  z-index: 20;
-  opacity: 1;
+.archive-seamless-card.is-active {
+  border-color: rgba(255,255,255,.7);
   filter: saturate(1.08) brightness(1);
-  border-color: rgba(255,255,255,.68);
   box-shadow:
     0 42px 120px rgba(0,0,0,.76),
     0 0 58px rgba(121,74,255,.14),
     inset 0 1px 0 rgba(255,255,255,.17);
 }
 
-.archive-drag-card:not(.is-active) {
-  cursor: pointer;
+.archive-seamless-card .carousel-card-content {
+  transition:
+    opacity 220ms ease,
+    transform 280ms ease;
 }
 
-.archive-drag-card.is-hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.archive-drag-card .carousel-card-content {
-  transition: opacity 260ms ease, transform 360ms ease;
-}
-
-.archive-drag-card:not(.is-active) .carousel-card-content {
-  opacity: .5;
+.archive-seamless-card:not(.is-active) .carousel-card-content {
+  opacity: .42;
   transform: scale(.96);
 }
 
@@ -2326,47 +2299,19 @@ body::-webkit-scrollbar,
   pointer-events: none;
 }
 
-.portfolio-page .carousel-scroll-note {
-  gap: .85rem;
-}
-
 @media (max-width: 900px) {
-  .archive-drag-card {
-    width: clamp(220px, 34vw, 320px);
-    transform:
-      translate3d(
-        calc(
-          -50% +
-          (var(--archive-offset) * clamp(150px, 31vw, 275px)) +
-          var(--drag-x)
-        ),
-        -50%,
-        calc(var(--archive-distance) * -54px)
-      )
-      rotateY(calc(var(--archive-offset) * -6deg))
-      scale(calc(1 - (var(--archive-distance) * 0.15)));
+  .archive-seamless-card {
+    width: clamp(220px, 35vw, 320px);
   }
 }
 
 @media (max-width: 650px) {
-  .archive-drag-stage {
+  .archive-seamless-stage {
     touch-action: pan-y;
   }
 
-  .archive-drag-card {
-    width: min(68vw, 290px);
-    transform:
-      translate3d(
-        calc(
-          -50% +
-          (var(--archive-offset) * 58vw) +
-          var(--drag-x)
-        ),
-        -50%,
-        calc(var(--archive-distance) * -36px)
-      )
-      rotateY(calc(var(--archive-offset) * -4deg))
-      scale(calc(1 - (var(--archive-distance) * 0.14)));
+  .archive-seamless-card {
+    width: min(69vw, 292px);
   }
 
   .portfolio-page .carousel-heading {
