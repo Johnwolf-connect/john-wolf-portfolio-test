@@ -384,8 +384,8 @@ function materialForMesh(mesh, materials) {
 function createLaptopBase(THREE, materials) {
   const hinge = new THREE.Group()
   hinge.name = 'RestoredMacBookBase'
-  hinge.position.set(0, -98, 4)
-  hinge.rotation.x = -1.08
+  hinge.position.set(0, -116, 2)
+  hinge.rotation.x = 1.08
 
   const deck = new THREE.Mesh(
     new THREE.BoxGeometry(350, 10, 226),
