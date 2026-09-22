@@ -51,13 +51,6 @@ const expertise = [
 
 const carouselCards = [
   {
-    title: 'Home',
-    eyebrow: 'Opening scene',
-    description: 'Return to the beginning of the experience.',
-    video: '/assets/hero-neon.mp4',
-    poster: '/assets/hero-neon-poster.png',
-  },
-  {
     title: 'Logos',
     eyebrow: 'Identity marks',
     description: 'Distinctive symbols and signature systems made to be remembered.',
@@ -84,20 +77,6 @@ const carouselCards = [
     description: 'Original visuals built to give campaigns and stories their own character.',
     video: '/assets/carousel/illustrations.mp4',
     poster: '/assets/carousel/illustrations.jpg',
-  },
-  {
-    title: 'About',
-    eyebrow: 'The designer',
-    description: 'The thinking, standards, and experience behind the work.',
-    video: '/assets/carousel/about.mp4',
-    poster: '/assets/carousel/about.jpg',
-  },
-  {
-    title: 'Contact',
-    eyebrow: 'Start something',
-    description: 'Bring the idea. We will shape the visual experience around it.',
-    video: '/assets/carousel/contact.mp4',
-    poster: '/assets/carousel/contact.jpg',
   },
 ]
 
@@ -271,7 +250,7 @@ export default function App() {
     setWebsitesPageOpen(false)
     setFroidPageOpen(false)
     setBrandProjectIndex(0)
-    setActiveNavigation('Portfolio')
+    setActiveNavigation('Services')
     setBrandPageOpen(true)
 
     if (window.location.hash !== BRAND_GUIDELINES_HASH) {
@@ -286,7 +265,7 @@ export default function App() {
   const openWebsitesPage = () => {
     setBrandVaultOpen(false)
     setBrandPageOpen(false)
-    setActiveNavigation('Portfolio')
+    setActiveNavigation('Services')
     setWebsitesPageOpen(true)
     setFroidPageOpen(false)
 
@@ -304,7 +283,7 @@ export default function App() {
     setBrandPageOpen(false)
     setWebsitesPageOpen(false)
     setFroidPageOpen(true)
-    setActiveNavigation('Portfolio')
+    setActiveNavigation('Services')
 
     if (window.location.hash !== FROID_HASH) {
       window.history.pushState({ section: 'Froid' }, '', FROID_HASH)
@@ -322,9 +301,9 @@ export default function App() {
 
     if (window.location.hash === WEBSITES_HASH) {
       window.history.replaceState(
-        { section: 'Portfolio' },
+        { section: 'Services' },
         '',
-        '#portfolio',
+        '#services',
       )
     }
   }
@@ -580,7 +559,7 @@ export default function App() {
           }
         }
 
-        setActiveNavigation('Portfolio')
+        setActiveNavigation('Services')
         setWebsitesPageOpen(false)
         setFroidPageOpen(false)
         setBrandPageOpen(true)
@@ -588,7 +567,7 @@ export default function App() {
       }
 
       if (window.location.hash === WEBSITES_HASH) {
-        setActiveNavigation('Portfolio')
+        setActiveNavigation('Services')
         setBrandPageOpen(false)
         setWebsitesPageOpen(true)
         setFroidPageOpen(false)
@@ -596,7 +575,7 @@ export default function App() {
       }
 
       if (window.location.hash === FROID_HASH) {
-        setActiveNavigation('Portfolio')
+        setActiveNavigation('Services')
         setBrandPageOpen(false)
         setWebsitesPageOpen(false)
         setFroidPageOpen(true)
@@ -648,14 +627,13 @@ export default function App() {
 
     const updateActiveNavigation = () => {
       if (brandPageOpen || websitesPageOpen || froidPageOpen) {
-        setActiveNavigation('Portfolio')
+        setActiveNavigation('Services')
         return
       }
 
       const laterSections = [
         'Contact',
         'Testimonials',
-        'Services',
         'About',
       ]
 
@@ -684,10 +662,15 @@ export default function App() {
         return
       }
 
+      const servicesSection =
+        document.querySelector('#services')
+
       const experienceSection =
-        activeCard === 0
-          ? 'Home'
-          : 'Portfolio'
+        servicesSection &&
+        servicesSection.getBoundingClientRect().top <=
+          120
+          ? 'Services'
+          : 'Home'
 
       setActiveNavigation(
         (current) =>
@@ -759,9 +742,9 @@ export default function App() {
           BRAND_GUIDELINES_HASH
         ) {
           window.history.replaceState(
-            { section: 'Portfolio' },
+            { section: 'Services' },
             '',
-            '#portfolio',
+            '#services',
           )
         }
       }
@@ -1531,7 +1514,7 @@ export default function App() {
                 </p>
 
                 <div className="hero-actions" data-reveal>
-                  <button className="button button-primary" type="button" onClick={() => scrollToSection('#portfolio')}>
+                  <button className="button button-primary" type="button" onClick={() => scrollToSection('#services')}>
                     Explore Selected Work
                     <span aria-hidden="true">→</span>
                   </button>
@@ -1574,11 +1557,11 @@ export default function App() {
 
         </div>
 
-        <section className="portfolio-page full-page-section" id="portfolio">
+        <section className="portfolio-page full-page-section" id="services">
           <div className="carousel-interface">
             <div className="carousel-heading">
-              <p>02 / Design archive</p>
-              <h2>Move through the work.</h2>
+              <p>Services</p>
+              <h2>Move through the services.</h2>
             </div>
 
             <div className="carousel-active-copy" aria-live="polite">
@@ -1719,17 +1702,9 @@ export default function App() {
         </section>
       </section>
 
-      <section className="chapter-page full-page-section" id="services">
-        <div className="chapter-page-copy">
-          <p>03 / Services</p>
-          <h2>What I build.</h2>
-          <span>Brand identity, digital experiences, campaign creative, and visual systems.</span>
-        </div>
-      </section>
-
       <section className="chapter-page full-page-section" id="about">
         <div className="chapter-page-copy">
-          <p>04 / About</p>
+          <p>About</p>
           <h2>About John Wolf.</h2>
           <span>The designer, process, and point of view behind the work.</span>
         </div>
@@ -1737,7 +1712,7 @@ export default function App() {
 
       <section className="chapter-page full-page-section" id="testimonials">
         <div className="chapter-page-copy">
-          <p>05 / Testimonials</p>
+          <p>Testimonials</p>
           <h2>What clients say.</h2>
           <span>A dedicated full-screen stage for proof, outcomes, and client perspective.</span>
         </div>
@@ -1745,7 +1720,7 @@ export default function App() {
 
       <section className="chapter-page full-page-section" id="contact">
         <div className="chapter-page-copy">
-          <p>06 / Contact</p>
+          <p>Contact</p>
           <h2>Start something.</h2>
           <span>A full-screen closing chapter built around the next project.</span>
         </div>
@@ -1813,7 +1788,7 @@ export default function App() {
               </span>
 
               <div className="brand-page-copy">
-                <p>03 / Selected systems</p>
+                <p>Selected systems</p>
 
                 <h2>
                   Brand
