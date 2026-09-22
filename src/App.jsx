@@ -1056,6 +1056,160 @@ export default function App() {
   }, [])
 
   useEffect(() => {
+    const videos = Array.from(
+      root.current?.querySelectorAll('video[loop]') ?? [],
+    )
+
+    if (!videos.length) return undefined
+
+    const cleanup = []
+
+    videos.forEach((video) => {
+      /*
+        Native looping can briefly hit the ended/stalled state,
+        especially after a video has been paused and resumed.
+        Restart a fraction before the final frame so the loop remains
+        continuous and never waits on the browser's ended event.
+      */
+      const restartThreshold = 0.075
+      const restartAt = 0.018
+
+      const keepLoopAlive = () => {
+        if (
+          !Number.isFinite(video.duration) ||
+          video.duration <= 0 ||
+          video.paused
+        ) {
+          return
+        }
+
+        if (
+          video.duration - video.currentTime <=
+          restartThreshold
+        ) {
+          video.currentTime = Math.min(
+            restartAt,
+            Math.max(
+              video.duration * 0.002,
+              0,
+            ),
+          )
+
+          video.play().catch(() => {})
+        }
+      }
+
+      const recoverPlayback = () => {
+        if (
+          video.dataset.shouldPlay !== 'true'
+        ) {
+          return
+        }
+
+        if (
+          video.ended ||
+          (
+            Number.isFinite(video.duration) &&
+            video.duration > 0 &&
+            video.currentTime >=
+              video.duration - restartThreshold
+          )
+        ) {
+          video.currentTime = restartAt
+        }
+
+        video.play().catch(() => {})
+      }
+
+      const handleEnded = () => {
+        video.currentTime = restartAt
+        recoverPlayback()
+      }
+
+      video.addEventListener(
+        'timeupdate',
+        keepLoopAlive,
+      )
+      video.addEventListener(
+        'ended',
+        handleEnded,
+      )
+      video.addEventListener(
+        'stalled',
+        recoverPlayback,
+      )
+      video.addEventListener(
+        'waiting',
+        recoverPlayback,
+      )
+
+      cleanup.push(() => {
+        video.removeEventListener(
+          'timeupdate',
+          keepLoopAlive,
+        )
+        video.removeEventListener(
+          'ended',
+          handleEnded,
+        )
+        video.removeEventListener(
+          'stalled',
+          recoverPlayback,
+        )
+        video.removeEventListener(
+          'waiting',
+          recoverPlayback,
+        )
+      })
+    })
+
+    const resumeVisibleLoops = () => {
+      if (document.hidden) return
+
+      videos.forEach((video) => {
+        if (
+          video.dataset.shouldPlay === 'true'
+        ) {
+          if (
+            video.ended ||
+            (
+              Number.isFinite(video.duration) &&
+              video.duration > 0 &&
+              video.currentTime >=
+                video.duration - 0.075
+            )
+          ) {
+            video.currentTime = 0.018
+          }
+
+          video.play().catch(() => {})
+        }
+      })
+    }
+
+    document.addEventListener(
+      'visibilitychange',
+      resumeVisibleLoops,
+    )
+    window.addEventListener(
+      'pageshow',
+      resumeVisibleLoops,
+    )
+
+    return () => {
+      cleanup.forEach((dispose) => dispose())
+      document.removeEventListener(
+        'visibilitychange',
+        resumeVisibleLoops,
+      )
+      window.removeEventListener(
+        'pageshow',
+        resumeVisibleLoops,
+      )
+    }
+  }, [])
+
+  useEffect(() => {
     const source = heroVideo.current
     const destination = homeCardVideo.current
     if (!source || !destination) return undefined
@@ -1085,19 +1239,44 @@ export default function App() {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     cardVideos.forEach((video, index) => {
-      if (
+      const shouldPlay =
         !brandPageOpen &&
         !reduceMotion &&
         index === activeCard
-      ) {
+
+      video.dataset.shouldPlay =
+        shouldPlay ? 'true' : 'false'
+
+      if (shouldPlay) {
+        /*
+          A newly selected service always starts from a clean loop
+          position instead of resuming at an old near-end frame.
+        */
+        if (
+          video.ended ||
+          !Number.isFinite(video.currentTime) ||
+          (
+            Number.isFinite(video.duration) &&
+            video.duration > 0 &&
+            video.currentTime >=
+              video.duration - 0.075
+          )
+        ) {
+          video.currentTime = 0.018
+        }
+
         video.play().catch(() => {})
       } else {
         video.pause()
+        video.currentTime = 0
       }
     })
 
     return () => {
-      cardVideos.forEach((video) => video.pause())
+      cardVideos.forEach((video) => {
+        video.dataset.shouldPlay = 'false'
+        video.pause()
+      })
     }
   }, [activeCard, brandPageOpen])
 
@@ -1501,6 +1680,7 @@ export default function App() {
               playsInline
               preload="auto"
               poster="/assets/hero-neon-poster.png"
+              data-should-play="true"
               onCanPlay={() => setVideoReady(true)}
             >
               <source src="/assets/hero-neon.mp4" type="video/mp4" />
@@ -1696,6 +1876,11 @@ export default function App() {
                         }
                         poster={card.poster}
                         aria-hidden="true"
+                        data-should-play={
+                          activeCard === index
+                            ? 'true'
+                            : 'false'
+                        }
                       >
                         <source
                           src={card.video}
@@ -1768,6 +1953,7 @@ export default function App() {
               preload="auto"
               poster="/assets/carousel/brand-guidelines.jpg"
               aria-hidden="true"
+              data-should-play="true"
             >
               <source
                 src="/assets/carousel/brand-guidelines.mp4"
@@ -1785,6 +1971,7 @@ export default function App() {
               preload="auto"
               poster="/assets/brand-guidelines/brand-guidelines-background-poster.jpg"
               aria-hidden="true"
+              data-should-play="true"
             >
               <source
                 src="/assets/brand-guidelines/brand-guidelines-background.mp4"
