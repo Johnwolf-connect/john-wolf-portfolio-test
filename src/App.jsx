@@ -1,13 +1,14 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { Draggable } from 'gsap/Draggable'
 import Lenis from 'lenis'
 import ExpertiseIcon from './components/ExpertiseIcon.jsx'
 import BrandVault from './components/BrandVault.jsx'
 import WebsitesPage from './components/WebsitesPage.jsx'
 import FroidPage from './components/FroidPage.jsx'
 
-gsap.registerPlugin(ScrollTrigger)
+gsap.registerPlugin(ScrollTrigger, Draggable)
 
 const navigation = ['Home', 'About', 'Services', 'Portfolio', 'Testimonials', 'Contact']
 
@@ -161,12 +162,71 @@ function getArchiveOffset(index, activeIndex, total) {
   return offset
 }
 
+
+function buildArchiveSeamlessLoop(items, spacing, animateFunc) {
+  const overlap = Math.ceil(1 / spacing)
+  const startTime = items.length * spacing + 0.5
+  const loopTime =
+    (items.length + overlap) * spacing + 1
+
+  const rawSequence = gsap.timeline({
+    paused: true,
+  })
+
+  const seamlessLoop = gsap.timeline({
+    paused: true,
+    repeat: -1,
+    onRepeat() {
+      if (this._time === this._dur) {
+        this._tTime += this._dur - 0.01
+      }
+    },
+  })
+
+  const total = items.length + overlap * 2
+
+  for (let i = 0; i < total; i += 1) {
+    const index = i % items.length
+    const time = i * spacing
+
+    rawSequence.add(
+      animateFunc(items[index]),
+      time,
+    )
+  }
+
+  rawSequence.time(startTime)
+
+  seamlessLoop
+    .to(rawSequence, {
+      time: loopTime,
+      duration: loopTime - startTime,
+      ease: 'none',
+    })
+    .fromTo(
+      rawSequence,
+      {
+        time: overlap * spacing + 1,
+      },
+      {
+        time: startTime,
+        duration:
+          startTime -
+          (overlap * spacing + 1),
+        immediateRender: false,
+        ease: 'none',
+      },
+    )
+
+  return seamlessLoop
+}
+
 export default function App() {
   const root = useRef(null)
   const experience = useRef(null)
   const stickyStage = useRef(null)
   const portfolioStage = useRef(null)
-  const archiveDrag = useRef({ active: false, startX: 0, x: 0, dragged: false })
+  const archiveLoopApi = useRef(null)
   const archiveWheelLocked = useRef(false)
   const heroVideo = useRef(null)
   const homeCardVideo = useRef(null)
@@ -1039,6 +1099,236 @@ export default function App() {
   }, [activeCard, brandPageOpen])
 
   useLayoutEffect(() => {
+    const stage = portfolioStage.current
+
+    if (!stage) return undefined
+
+    const cards = gsap.utils.toArray(
+      '.archive-seamless-card',
+      stage,
+    )
+
+    const proxy =
+      stage.querySelector(
+        '.archive-drag-proxy',
+      )
+
+    if (!cards.length || !proxy) {
+      return undefined
+    }
+
+    const spacing = 0.12
+    const snapTime = gsap.utils.snap(spacing)
+
+    gsap.set(cards, {
+      xPercent: 360,
+      opacity: 0,
+      scale: 0.18,
+      transformOrigin: '50% 50%',
+    })
+
+    const animateCard = (element) => {
+      const timeline = gsap.timeline()
+
+      timeline
+        .fromTo(
+          element,
+          {
+            scale: 0.18,
+            opacity: 0,
+          },
+          {
+            scale: 1,
+            opacity: 1,
+            zIndex: 100,
+            duration: 0.5,
+            yoyo: true,
+            repeat: 1,
+            ease: 'power1.in',
+            immediateRender: false,
+          },
+        )
+        .fromTo(
+          element,
+          {
+            xPercent: 360,
+          },
+          {
+            xPercent: -360,
+            duration: 1,
+            ease: 'none',
+            immediateRender: false,
+          },
+          0,
+        )
+
+      return timeline
+    }
+
+    const loop =
+      buildArchiveSeamlessLoop(
+        cards,
+        spacing,
+        animateCard,
+      )
+
+    const playhead = { offset: 0 }
+    const wrapTime = gsap.utils.wrap(
+      0,
+      loop.duration(),
+    )
+
+    let currentIndex = 0
+    let dragStartOffset = 0
+
+    const syncActiveCard = () => {
+      const rawIndex = Math.round(
+        playhead.offset / spacing,
+      )
+
+      const nextIndex =
+        ((rawIndex % cards.length) +
+          cards.length) %
+        cards.length
+
+      if (nextIndex !== currentIndex) {
+        currentIndex = nextIndex
+        setActiveCard(nextIndex)
+      }
+    }
+
+    const scrub = gsap.to(playhead, {
+      offset: 0,
+      duration: 0.62,
+      ease: 'power3',
+      paused: true,
+      onUpdate() {
+        loop.time(
+          wrapTime(playhead.offset),
+        )
+        syncActiveCard()
+      },
+    })
+
+    const smoothToOffset = (offset) => {
+      scrub.vars.offset = snapTime(offset)
+      scrub.invalidate().restart()
+    }
+
+    const moveBy = (amount) => {
+      smoothToOffset(
+        scrub.vars.offset +
+          spacing * amount,
+      )
+    }
+
+    const goToIndex = (targetIndex) => {
+      const rawStep = Math.round(
+        scrub.vars.offset / spacing,
+      )
+
+      const current =
+        ((rawStep % cards.length) +
+          cards.length) %
+        cards.length
+
+      let delta = targetIndex - current
+
+      if (delta > cards.length / 2) {
+        delta -= cards.length
+      }
+
+      if (delta < -cards.length / 2) {
+        delta += cards.length
+      }
+
+      smoothToOffset(
+        scrub.vars.offset +
+          delta * spacing,
+      )
+    }
+
+    const draggable =
+      Draggable.create(proxy, {
+        type: 'x',
+        trigger: stage,
+        allowEventDefault: true,
+        onPress() {
+          dragStartOffset =
+            scrub.vars.offset
+          stage.classList.add(
+            'is-dragging',
+          )
+        },
+        onDrag() {
+          scrub.vars.offset =
+            dragStartOffset +
+            (this.startX - this.x) *
+              0.00135
+
+          scrub.invalidate().restart()
+        },
+        onDragEnd() {
+          stage.classList.remove(
+            'is-dragging',
+          )
+          smoothToOffset(
+            scrub.vars.offset,
+          )
+        },
+      })[0]
+
+    const handleWheel = (event) => {
+      const horizontalIntent =
+        Math.abs(event.deltaX) >
+        Math.abs(event.deltaY) * 0.7
+
+      if (
+        !horizontalIntent ||
+        Math.abs(event.deltaX) < 18 ||
+        archiveWheelLocked.current
+      ) {
+        return
+      }
+
+      event.preventDefault()
+
+      archiveWheelLocked.current = true
+      moveBy(event.deltaX > 0 ? 1 : -1)
+
+      window.setTimeout(() => {
+        archiveWheelLocked.current = false
+      }, 360)
+    }
+
+    stage.addEventListener(
+      'wheel',
+      handleWheel,
+      { passive: false },
+    )
+
+    archiveLoopApi.current = {
+      goToIndex,
+      moveBy,
+      getIndex: () => currentIndex,
+    }
+
+    loop.time(0)
+    syncActiveCard()
+
+    return () => {
+      stage.removeEventListener(
+        'wheel',
+        handleWheel,
+      )
+      draggable?.kill()
+      scrub.kill()
+      loop.kill()
+      archiveLoopApi.current = null
+    }
+  }, [])
+
+  useLayoutEffect(() => {
     const context = gsap.context(() => {
       const reduceMotion = window.matchMedia(
         '(prefers-reduced-motion: reduce)',
@@ -1301,225 +1591,129 @@ export default function App() {
             </div>
 
             <div
-              className="carousel-viewport archive-drag-stage"
+              className="carousel-viewport archive-seamless-stage"
               aria-label="Graphic design portfolio categories"
               ref={portfolioStage}
-              onPointerDown={(event) => {
-                const stage = portfolioStage.current
-                if (!stage) return
-
-                archiveDrag.current = {
-                  active: true,
-                  startX: event.clientX,
-                  x: event.clientX,
-                  dragged: false,
-                }
-
-                stage.setPointerCapture?.(event.pointerId)
-                stage.classList.add('is-dragging')
-              }}
-              onPointerMove={(event) => {
-                const stage = portfolioStage.current
-                const drag = archiveDrag.current
-
-                if (!stage || !drag.active) return
-
-                drag.x = event.clientX
-                const delta = drag.x - drag.startX
-
-                if (Math.abs(delta) > 6) {
-                  drag.dragged = true
-                }
-
-                stage.style.setProperty(
-                  '--drag-x',
-                  `${delta}px`,
-                )
-              }}
-              onPointerUp={(event) => {
-                const stage = portfolioStage.current
-                const drag = archiveDrag.current
-
-                if (!stage || !drag.active) return
-
-                const delta = event.clientX - drag.startX
-                const threshold = Math.min(
-                  90,
-                  window.innerWidth * 0.1,
-                )
-
-                drag.active = false
-                stage.classList.remove('is-dragging')
-                stage.style.setProperty('--drag-x', '0px')
-
-                if (Math.abs(delta) >= threshold) {
-                  setActiveCard((current) => {
-                    const direction = delta < 0 ? 1 : -1
-
-                    return (
-                      current +
-                      direction +
-                      carouselCards.length
-                    ) % carouselCards.length
-                  })
-                }
-
-                window.setTimeout(() => {
-                  archiveDrag.current.dragged = false
-                }, 0)
-              }}
-              onPointerCancel={() => {
-                const stage = portfolioStage.current
-                archiveDrag.current.active = false
-                archiveDrag.current.dragged = false
-                stage?.classList.remove('is-dragging')
-                stage?.style.setProperty('--drag-x', '0px')
-              }}
-              onWheel={(event) => {
-                const horizontalIntent =
-                  Math.abs(event.deltaX) >
-                  Math.abs(event.deltaY) * 0.7
-
-                if (
-                  !horizontalIntent ||
-                  Math.abs(event.deltaX) < 18
-                ) {
-                  return
-                }
-
-                event.preventDefault()
-
-                if (archiveWheelLocked.current) {
-                  return
-                }
-
-                archiveWheelLocked.current = true
-
-                const direction =
-                  event.deltaX > 0 ? 1 : -1
-
-                setActiveCard((current) =>
-                  (
-                    current +
-                    direction +
-                    carouselCards.length
-                  ) % carouselCards.length,
-                )
-
-                window.setTimeout(() => {
-                  archiveWheelLocked.current = false
-                }, 420)
-              }}
             >
-              <div className="archive-drag-track">
-                {carouselCards.map((card, index) => {
-                  const offset = getArchiveOffset(
-                    index,
-                    activeCard,
-                    carouselCards.length,
-                  )
-                  const distance = Math.abs(offset)
-                  const visible = distance <= 3
+              <div
+                className="archive-drag-proxy"
+                aria-hidden="true"
+              />
 
-                  return (
-                    <article
-                      className={`carousel-card archive-drag-card ${offset === 0 ? 'is-active' : ''} ${visible ? '' : 'is-hidden'} ${card.title === 'Brand Guidelines' || card.title === 'Logos' || card.title === 'Websites' ? 'is-brand-page-trigger' : ''}`}
-                      style={{
-                        '--archive-offset': offset,
-                        '--archive-distance': distance,
-                      }}
-                      key={card.title}
-                      aria-label={card.title}
-                      role="button"
-                      tabIndex={offset === 0 ? 0 : -1}
-                      onClick={(event) => {
-                        if (archiveDrag.current.dragged) {
-                          event.preventDefault()
-                          return
-                        }
+              <div className="archive-seamless-track">
+                {carouselCards.map((card, index) => (
+                  <article
+                    className={`carousel-card archive-seamless-card ${activeCard === index ? 'is-active' : ''} ${card.title === 'Brand Guidelines' || card.title === 'Logos' || card.title === 'Websites' ? 'is-brand-page-trigger' : ''}`}
+                    key={card.title}
+                    aria-label={card.title}
+                    role="button"
+                    tabIndex={
+                      activeCard === index
+                        ? 0
+                        : -1
+                    }
+                    onClick={(event) => {
+                      const current =
+                        archiveLoopApi.current
+                          ?.getIndex?.()
 
-                        if (offset !== 0) {
-                          setActiveCard(index)
-                          return
-                        }
+                      if (current !== index) {
+                        archiveLoopApi.current
+                          ?.goToIndex?.(index)
+                        return
+                      }
 
-                        if (card.title === 'Logos') {
-                          event.preventDefault()
-                          openLogosPage(event)
-                          return
-                        }
-
-                        if (card.title === 'Brand Guidelines') {
-                          openBrandGuidelines(event)
-                          return
-                        }
-
-                        if (card.title === 'Websites') {
-                          openWebsitesPage()
-                        }
-                      }}
-                      onKeyDown={(event) => {
-                        const activate =
-                          event.key === 'Enter' ||
-                          event.key === ' '
-
-                        if (!activate) return
+                      if (card.title === 'Logos') {
                         event.preventDefault()
+                        openLogosPage(event)
+                        return
+                      }
 
-                        if (offset !== 0) {
-                          setActiveCard(index)
-                          return
+                      if (
+                        card.title ===
+                        'Brand Guidelines'
+                      ) {
+                        openBrandGuidelines(event)
+                        return
+                      }
+
+                      if (
+                        card.title === 'Websites'
+                      ) {
+                        openWebsitesPage()
+                      }
+                    }}
+                    onKeyDown={(event) => {
+                      const activate =
+                        event.key === 'Enter' ||
+                        event.key === ' '
+
+                      if (!activate) return
+                      event.preventDefault()
+
+                      const current =
+                        archiveLoopApi.current
+                          ?.getIndex?.()
+
+                      if (current !== index) {
+                        archiveLoopApi.current
+                          ?.goToIndex?.(index)
+                        return
+                      }
+
+                      if (card.title === 'Logos') {
+                        openLogosPage(event)
+                        return
+                      }
+
+                      if (
+                        card.title ===
+                        'Brand Guidelines'
+                      ) {
+                        openBrandGuidelines(event)
+                        return
+                      }
+
+                      if (
+                        card.title === 'Websites'
+                      ) {
+                        openWebsitesPage()
+                      }
+                    }}
+                  >
+                    <div className="carousel-card-video">
+                      <video
+                        muted
+                        loop
+                        playsInline
+                        preload={
+                          activeCard === index
+                            ? 'auto'
+                            : 'metadata'
                         }
+                        poster={card.poster}
+                        aria-hidden="true"
+                      >
+                        <source
+                          src={card.video}
+                          type="video/mp4"
+                        />
+                      </video>
+                      <div className="carousel-card-shade" />
+                    </div>
 
-                        if (card.title === 'Logos') {
-                          openLogosPage(event)
-                          return
-                        }
-
-                        if (card.title === 'Brand Guidelines') {
-                          openBrandGuidelines(event)
-                          return
-                        }
-
-                        if (card.title === 'Websites') {
-                          openWebsitesPage()
-                        }
-                      }}
-                    >
-                      <div className="carousel-card-video">
-                        <video
-                          muted
-                          loop
-                          playsInline
-                          preload={
-                            offset === 0
-                              ? 'auto'
-                              : 'metadata'
-                          }
-                          poster={card.poster}
-                          aria-hidden="true"
-                        >
-                          <source
-                            src={card.video}
-                            type="video/mp4"
-                          />
-                        </video>
-                        <div className="carousel-card-shade" />
-                      </div>
-
-                      <div className="carousel-card-content">
-                        <p>{card.eyebrow}</p>
-                        <h3>{card.title}</h3>
-                        <span>View collection ↗</span>
-                      </div>
-                    </article>
-                  )
-                })}
+                    <div className="carousel-card-content">
+                      <p>{card.eyebrow}</p>
+                      <h3>{card.title}</h3>
+                      <span>View collection ↗</span>
+                    </div>
+                  </article>
+                ))}
               </div>
             </div>
 
             <div className="carousel-scroll-note">
-              <span>Drag / swipe to explore</span>
+              <span>Drag / swipe · smooth snap</span>
               <i />
             </div>
           </div>
