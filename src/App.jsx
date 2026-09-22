@@ -1055,29 +1055,6 @@ export default function App() {
     }
   }, [])
 
-  useEffect(() => {
-    const video = heroVideo.current
-    if (!video) return undefined
-
-    video.muted = true
-    video.defaultMuted = true
-    video.loop = true
-    video.playsInline = true
-
-    const playHero = () => {
-      video.play().catch(() => {})
-    }
-
-    playHero()
-
-    window.addEventListener('pageshow', playHero)
-    window.addEventListener('focus', playHero)
-
-    return () => {
-      window.removeEventListener('pageshow', playHero)
-      window.removeEventListener('focus', playHero)
-    }
-  }, [])
 
   useEffect(() => {
     const source = heroVideo.current
