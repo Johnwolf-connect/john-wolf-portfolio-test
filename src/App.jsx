@@ -168,10 +168,6 @@ export default function App() {
   const portfolioStage = useRef(null)
   const archiveDrag = useRef({ active: false, startX: 0, x: 0, dragged: false })
   const archiveWheelLocked = useRef(false)
-  const archiveWheelGesture = useRef({
-    totalX: 0,
-    resetTimer: null,
-  })
   const heroVideo = useRef(null)
   const homeCardVideo = useRef(null)
   const brandPageStage = useRef(null)
@@ -1347,16 +1343,10 @@ export default function App() {
                 if (!stage || !drag.active) return
 
                 const delta = event.clientX - drag.startX
-                const threshold =
-                  window.innerWidth <= 700
-                    ? Math.min(
-                        68,
-                        window.innerWidth * 0.16,
-                      )
-                    : Math.min(
-                        130,
-                        window.innerWidth * 0.11,
-                      )
+                const threshold = Math.min(
+                  90,
+                  window.innerWidth * 0.1,
+                )
 
                 drag.active = false
                 stage.classList.remove('is-dragging')
@@ -1388,9 +1378,12 @@ export default function App() {
               onWheel={(event) => {
                 const horizontalIntent =
                   Math.abs(event.deltaX) >
-                  Math.abs(event.deltaY) * 1.15
+                  Math.abs(event.deltaY) * 0.7
 
-                if (!horizontalIntent) {
+                if (
+                  !horizontalIntent ||
+                  Math.abs(event.deltaX) < 18
+                ) {
                   return
                 }
 
@@ -1400,45 +1393,10 @@ export default function App() {
                   return
                 }
 
-                const gesture =
-                  archiveWheelGesture.current
-
-                gesture.totalX += event.deltaX
-
-                if (gesture.resetTimer) {
-                  window.clearTimeout(
-                    gesture.resetTimer,
-                  )
-                }
-
-                gesture.resetTimer =
-                  window.setTimeout(() => {
-                    gesture.totalX = 0
-                    gesture.resetTimer = null
-                  }, 160)
-
-                const commitThreshold = 120
-
-                if (
-                  Math.abs(gesture.totalX) <
-                  commitThreshold
-                ) {
-                  return
-                }
-
                 archiveWheelLocked.current = true
 
                 const direction =
-                  gesture.totalX > 0 ? 1 : -1
-
-                gesture.totalX = 0
-
-                if (gesture.resetTimer) {
-                  window.clearTimeout(
-                    gesture.resetTimer,
-                  )
-                  gesture.resetTimer = null
-                }
+                  event.deltaX > 0 ? 1 : -1
 
                 setActiveCard((current) =>
                   (
@@ -1450,7 +1408,7 @@ export default function App() {
 
                 window.setTimeout(() => {
                   archiveWheelLocked.current = false
-                }, 680)
+                }, 420)
               }}
             >
               <div className="archive-drag-track">
