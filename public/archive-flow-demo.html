@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>John Wolf — Archive Flow Demo</title>
+  <style>
+    :root {
+      --pink: #ef77bb;
+      --ink: #050505;
+      --page-gutter: clamp(1.4rem, 4vw, 3.4rem);
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--ink); color: #fff; }
+    body { overflow: hidden; }
+    button, a { font: inherit; color: inherit; }
+    a { text-decoration: none; }
+
+    .demo {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(97,55,150,.20), transparent 34%),
+        linear-gradient(180deg,#050505 0%,#09070d 48%,#050505 100%);
+      isolation: isolate;
+    }
+    .demo::before {
+      content:"";
+      position:absolute;
+      inset:0;
+      opacity:.18;
+      pointer-events:none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size:54px 54px;
+      mask-image:radial-gradient(circle at center,#000 0%,transparent 74%);
+      z-index:1;
+    }
+
+    .topbar {
+      position:absolute;
+      top:0; left:0; right:0;
+      z-index:50;
+      display:grid;
+      grid-template-columns:auto 1fr auto;
+      align-items:center;
+      gap:2rem;
+      padding:1.15rem var(--page-gutter);
+      border-bottom:1px solid rgba(255,255,255,.15);
+      background:linear-gradient(180deg,rgba(5,5,5,.88),rgba(5,5,5,.08));
+      backdrop-filter:blur(14px);
+    }
+    .logo { font-weight:820; font-size:clamp(1.5rem,2.2vw,2.1rem); letter-spacing:-.08em; }
+    .logo span { color:var(--pink); }
+    .demo-label {
+      justify-self:center;
+      color:rgba(255,255,255,.5);
+      font-size:.64rem;
+      font-weight:760;
+      letter-spacing:.22em;
+      text-transform:uppercase;
+    }
+    .back {
+      justify-self:end;
+      padding:.72rem 1rem;
+      border:1px solid rgba(255,255,255,.42);
+      border-radius:.6rem;
+      background:rgba(5,5,8,.32);
+    }
+
+    .archive-heading {
+      position:absolute;
+      top:clamp(6.3rem,13vh,9rem);
+      left:var(--page-gutter);
+      z-index:40;
+      width:min(24rem,29vw);
+      pointer-events:none;
+    }
+    .archive-heading p,
+    .active-copy p {
+      margin:0;
+      color:var(--pink);
+      font-size:.66rem;
+      font-weight:760;
+      letter-spacing:.24em;
+      text-transform:uppercase;
+    }
+    .archive-heading h1 {
+      margin:.75rem 0 0;
+      font-size:clamp(2.3rem,4.25vw,4.45rem);
+      line-height:.95;
+      letter-spacing:-.065em;
+    }
+
+    .archive-active {
+      position:absolute;
+      right:var(--page-gutter);
+      bottom:clamp(2rem,5vh,4rem);
+      z-index:40;
+      width:min(20rem,28vw);
+      text-align:right;
+      pointer-events:none;
+    }
+    .archive-active .count {
+      display:block;
+      margin-bottom:1rem;
+      color:rgba(255,255,255,.42);
+      font-size:.7rem;
+      letter-spacing:.16em;
+    }
+    .archive-active h2 {
+      margin:.45rem 0 0;
+      font-size:clamp(2.2rem,3.5vw,3.8rem);
+      line-height:.92;
+      letter-spacing:-.06em;
+    }
+    .archive-active .rule {
+      width:100%; height:1px; margin:1.15rem 0;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,.36));
+    }
+    .archive-active small {
+      display:block;
+      color:rgba(255,255,255,.54);
+      font-size:.78rem;
+      line-height:1.65;
+    }
+
+    .archive-stage {
+      position:absolute;
+      inset:0;
+      z-index:10;
+      display:grid;
+      place-items:center;
+      padding-top:4rem;
+    }
+    .archive-section {
+      position:absolute;
+      inset:0;
+      visibility:hidden;
+    }
+    .outer, .inner {
+      position:absolute;
+      inset:0;
+      overflow:hidden;
+    }
+    .panel {
+      position:absolute;
+      inset:0;
+      display:grid;
+      place-items:center;
+      padding-top:3.4rem;
+    }
+
+    .card {
+      position:relative;
+      width:min(31vw,430px);
+      aspect-ratio:.725;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.35);
+      border-radius:1.45rem;
+      background:#111018;
+      box-shadow:
+        0 42px 130px rgba(0,0,0,.72),
+        0 0 64px rgba(121,74,255,.13),
+        inset 0 1px 0 rgba(255,255,255,.13);
+      transform:translateZ(0);
+      will-change:transform,opacity;
+    }
+    .card::after {
+      content:"";
+      position:absolute;
+      inset:0;
+      z-index:3;
+      pointer-events:none;
+      background:
+        linear-gradient(180deg,rgba(255,255,255,.08),transparent 18%),
+        linear-gradient(180deg,transparent 44%,rgba(0,0,0,.94) 100%);
+    }
+    .card video, .card img {
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      filter:saturate(1.08) contrast(1.06) brightness(.82);
+    }
+    .card-copy {
+      position:absolute;
+      left:1.35rem; right:1.35rem; bottom:1.35rem;
+      z-index:5;
+    }
+    .card-copy p {
+      margin:0;
+      color:rgba(255,255,255,.55);
+      font-size:.61rem;
+      font-weight:760;
+      letter-spacing:.17em;
+      text-transform:uppercase;
+    }
+    .card-copy h3 {
+      margin:.5rem 0 .55rem;
+      font-size:clamp(1.9rem,3vw,3rem);
+      line-height:.92;
+      letter-spacing:-.06em;
+    }
+    .card-copy span {
+      color:rgba(255,255,255,.58);
+      font-size:.72rem;
+    }
+
+    .ghost-card {
+      position:absolute;
+      top:50%;
+      width:min(20vw,280px);
+      aspect-ratio:.725;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:1.15rem;
+      opacity:.26;
+      filter:saturate(.62) brightness(.55);
+      pointer-events:none;
+    }
+    .ghost-card.prev { left:calc(var(--page-gutter) + 18vw); transform:translate(-50%,-50%) rotateY(42deg) scale(.84); }
+    .ghost-card.next { right:calc(var(--page-gutter) + 18vw); transform:translate(50%,-50%) rotateY(-42deg) scale(.84); }
+    .ghost-card video, .ghost-card img { width:100%; height:100%; object-fit:cover; }
+
+    .scroll-note {
+      position:absolute;
+      left:var(--page-gutter);
+      bottom:2rem;
+      z-index:40;
+      display:flex;
+      align-items:center;
+      gap:1rem;
+      color:rgba(255,255,255,.42);
+      font-size:.62rem;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      pointer-events:none;
+    }
+    .scroll-note i {
+      width:4.2rem; height:1px;
+      background:linear-gradient(90deg,rgba(255,255,255,.58),transparent);
+    }
+
+    @media (max-width: 900px) {
+      .archive-heading { width:46vw; top:6.4rem; }
+      .archive-heading h1 { font-size:clamp(2rem,8vw,3.6rem); }
+      .archive-active { width:34vw; }
+      .card { width:min(58vw,360px); }
+      .ghost-card { display:none; }
+    }
+    @media (max-width: 650px) {
+      .demo-label { display:none; }
+      .topbar { grid-template-columns:auto 1fr; }
+      .back { font-size:.75rem; }
+      .archive-heading {
+        top:5.8rem; left:1rem; width:52vw;
+      }
+      .archive-heading p { font-size:.55rem; }
+      .archive-heading h1 { font-size:2.15rem; max-width:12rem; }
+      .archive-active {
+        right:1rem; bottom:1.1rem; width:45vw;
+      }
+      .archive-active small { display:none; }
+      .archive-active h2 { font-size:2rem; }
+      .card { width:min(72vw,310px); }
+      .scroll-note { left:1rem; bottom:1.2rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="demo">
+    <header class="topbar">
+      <a class="logo" href="/#home">JW<span>.</span></a>
+      <div class="demo-label">Design Archive / Observer Flow Study</div>
+      <a class="back" href="/#portfolio">Back to current site ↗</a>
+    </header>
+
+    <div class="archive-heading">
+      <p>02 / Design archive</p>
+      <h1>Move through the work.</h1>
+    </div>
+
+    <div class="archive-active">
+      <span class="count">01 / 07</span>
+      <div class="active-copy">
+        <p>Opening scene</p>
+        <h2>Home</h2>
+        <div class="rule"></div>
+        <small>Return to the beginning of the experience.</small>
+      </div>
+    </div>
+
+    <div class="archive-stage"></div>
+
+    <div class="scroll-note">
+      <span>Scroll / swipe</span>
+      <i></i>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/Observer.min.js"></script>
+  <script>
+    gsap.registerPlugin(Observer);
+
+    const cards = [
+      {
+        title: "Home",
+        eyebrow: "Opening scene",
+        description: "Return to the beginning of the experience.",
+        video: "/assets/hero-neon.mp4",
+        poster: "/assets/hero-neon-poster.png",
+        href: "/#home"
+      },
+      {
+        title: "Logos",
+        eyebrow: "Identity marks",
+        description: "Distinctive symbols and signature systems made to be remembered.",
+        video: "/assets/carousel/packaging.mp4",
+        poster: "/assets/carousel/packaging.jpg",
+        href: "/ring-lab.html"
+      },
+      {
+        title: "Brand Guidelines",
+        eyebrow: "Visual systems",
+        description: "Rules that keep every brand expression clear, consistent, and recognizable.",
+        video: "/assets/carousel/brand-guidelines.mp4",
+        poster: "/assets/carousel/brand-guidelines.jpg",
+        href: "/#brand-guidelines"
+      },
+      {
+        title: "Websites",
+        eyebrow: "Digital experiences",
+        description: "Immersive interfaces that turn strong ideas into intuitive experiences.",
+        video: "/assets/carousel/websites.mp4",
+        poster: "/assets/carousel/websites.jpg",
+        href: "/#websites"
+      },
+      {
+        title: "Illustrations",
+        eyebrow: "Custom artwork",
+        description: "Original visuals built to give campaigns and stories their own character.",
+        video: "/assets/carousel/illustrations.mp4",
+        poster: "/assets/carousel/illustrations.jpg",
+        href: "/#portfolio"
+      },
+      {
+        title: "About",
+        eyebrow: "The designer",
+        description: "The thinking, standards, and experience behind the work.",
+        video: "/assets/carousel/about.mp4",
+        poster: "/assets/carousel/about.jpg",
+        href: "/#about"
+      },
+      {
+        title: "Contact",
+        eyebrow: "Start something",
+        description: "Bring the idea. We will shape the visual experience around it.",
+        video: "/assets/carousel/contact.mp4",
+        poster: "/assets/carousel/contact.jpg",
+        href: "/#contact"
+      }
+    ];
+
+    const stage = document.querySelector(".archive-stage");
+    stage.innerHTML = cards.map((card, index) => `
+      <section class="archive-section" data-index="${index}">
+        <div class="outer">
+          <div class="inner">
+            <div class="panel">
+              <a class="card" href="${card.href}" aria-label="Open ${card.title}">
+                <video muted loop playsinline preload="${index === 0 ? "auto" : "metadata"}" poster="${card.poster}">
+                  <source src="${card.video}" type="video/mp4">
+                </video>
+                <div class="card-copy">
+                  <p>${card.eyebrow}</p>
+                  <h3>${card.title}</h3>
+                  <span>View collection ↗</span>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    `).join("");
+
+    const sections = gsap.utils.toArray(".archive-section");
+    const outers = gsap.utils.toArray(".outer");
+    const inners = gsap.utils.toArray(".inner");
+    const cardsEls = gsap.utils.toArray(".card");
+    const count = document.querySelector(".archive-active .count");
+    const activeCopy = document.querySelector(".active-copy");
+
+    let currentIndex = -1;
+    let animating = false;
+
+    gsap.set(outers, { yPercent: 100 });
+    gsap.set(inners, { yPercent: -100 });
+    gsap.set(sections, { autoAlpha: 0 });
+
+    function updateCopy(index, direction) {
+      const item = cards[index];
+      const d = direction < 0 ? -1 : 1;
+
+      count.textContent = `${String(index + 1).padStart(2,"0")} / ${String(cards.length).padStart(2,"0")}`;
+
+      gsap.timeline()
+        .to(activeCopy, { autoAlpha: 0, y: -16 * d, duration: .2, ease: "power2.in" })
+        .add(() => {
+          activeCopy.innerHTML = `
+            <p>${item.eyebrow}</p>
+            <h2>${item.title}</h2>
+            <div class="rule"></div>
+            <small>${item.description}</small>
+          `;
+        })
+        .fromTo(activeCopy,
+          { autoAlpha: 0, y: 20 * d },
+          { autoAlpha: 1, y: 0, duration: .45, ease: "power3.out" }
+        );
+    }
+
+    function gotoSection(index, direction) {
+      if (index < 0 || index >= sections.length || animating) return;
+
+      animating = true;
+      const fromTop = direction === -1;
+      const dFactor = fromTop ? -1 : 1;
+
+      const tl = gsap.timeline({
+        defaults: { duration: 1.05, ease: "power3.inOut" },
+        onComplete: () => {
+          animating = false;
+          cardsEls.forEach((el, i) => {
+            const v = el.querySelector("video");
+            if (!v) return;
+            if (i === currentIndex) v.play().catch(() => {});
+            else v.pause();
+          });
+        }
+      });
+
+      if (currentIndex >= 0) {
+        gsap.set(sections[currentIndex], { zIndex: 0 });
+        tl.to(cardsEls[currentIndex], {
+          yPercent: -13 * dFactor,
+          rotate: 1.2 * dFactor,
+          scale: .94,
+          opacity: .28
+        }, 0)
+        .set(sections[currentIndex], { autoAlpha: 0 });
+      }
+
+      gsap.set(sections[index], { autoAlpha: 1, zIndex: 1 });
+
+      tl.fromTo(
+        [outers[index], inners[index]],
+        { yPercent: i => i ? -100 * dFactor : 100 * dFactor },
+        { yPercent: 0 },
+        0
+      )
+      .fromTo(
+        cardsEls[index],
+        {
+          yPercent: 18 * dFactor,
+          rotate: -1.4 * dFactor,
+          scale: .94,
+          opacity: .35
+        },
+        {
+          yPercent: 0,
+          rotate: 0,
+          scale: 1,
+          opacity: 1,
+          duration: 1.12
+        },
+        0
+      )
+      .fromTo(
+        cardsEls[index].querySelector(".card-copy"),
+        { autoAlpha: 0, y: 34 * dFactor },
+        { autoAlpha: 1, y: 0, duration: .72, ease: "power3.out" },
+        .28
+      );
+
+      currentIndex = index;
+      updateCopy(index, direction);
+    }
+
+    Observer.create({
+      type: "wheel,touch,pointer",
+      wheelSpeed: -1,
+      tolerance: 12,
+      preventDefault: true,
+      onDown: () => {
+        if (!animating && currentIndex > 0) gotoSection(currentIndex - 1, -1);
+      },
+      onUp: () => {
+        if (!animating && currentIndex < sections.length - 1) gotoSection(currentIndex + 1, 1);
+      }
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if ((event.key === "ArrowDown" || event.key === "PageDown") && currentIndex < sections.length - 1) {
+        event.preventDefault();
+        gotoSection(currentIndex + 1, 1);
+      }
+      if ((event.key === "ArrowUp" || event.key === "PageUp") && currentIndex > 0) {
+        event.preventDefault();
+        gotoSection(currentIndex - 1, -1);
+      }
+    });
+
+    gotoSection(0, 1);
+  </script>
+</body>
+</html>
