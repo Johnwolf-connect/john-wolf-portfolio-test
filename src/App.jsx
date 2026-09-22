@@ -1374,6 +1374,31 @@ export default function App() {
                 stage?.classList.remove('is-dragging')
                 stage?.style.setProperty('--drag-x', '0px')
               }}
+              onWheel={(event) => {
+                const horizontalIntent =
+                  Math.abs(event.deltaX) >
+                  Math.abs(event.deltaY) * 0.7
+
+                if (
+                  !horizontalIntent ||
+                  Math.abs(event.deltaX) < 18
+                ) {
+                  return
+                }
+
+                event.preventDefault()
+
+                const direction =
+                  event.deltaX > 0 ? 1 : -1
+
+                setActiveCard((current) =>
+                  (
+                    current +
+                    direction +
+                    carouselCards.length
+                  ) % carouselCards.length,
+                )
+              }}
             >
               <div className="archive-drag-track">
                 {carouselCards.map((card, index) => {
