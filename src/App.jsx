@@ -1057,7 +1057,7 @@ export default function App() {
 
   useEffect(() => {
     const videos = Array.from(
-      document.querySelectorAll('video[loop]'),
+      document.querySelectorAll('video[loop]:not(.hero-video)'),
     )
 
     if (!videos.length) return undefined
@@ -1213,82 +1213,186 @@ export default function App() {
     const video = heroVideo.current
     if (!video) return undefined
 
-    let intervalId = null
-    let restarting = false
+    let intervalId = 0
+    let lastTime = -1
+    let lastProgressAt = performance.now()
+    let recovering = false
 
-    const forceHeroPlayback = () => {
-      if (!video || restarting) return
+    const safePlay = () => {
+      const promise = video.play()
+      promise?.catch?.(() => {})
+    }
 
-      const duration = video.duration
-      const nearEnd =
-        Number.isFinite(duration) &&
-        duration > 0 &&
-        video.currentTime >= duration - 0.12
+    const restartFromBeginning = () => {
+      if (recovering) return
+      recovering = true
 
-      if (nearEnd || video.ended) {
-        restarting = true
-        try {
-          video.currentTime = 0.01
-        } catch {
-          // Ignore seek errors while metadata is refreshing.
-        }
-
-        const playResult = video.play()
-        playResult?.catch?.(() => {})
-        restarting = false
-        return
+      try {
+        video.currentTime = 0
+      } catch {
+        // Metadata may not be ready yet.
       }
 
-      if (video.paused && document.visibilityState === 'visible') {
-        const playResult = video.play()
-        playResult?.catch?.(() => {})
+      safePlay()
+
+      window.setTimeout(() => {
+        recovering = false
+        lastTime = video.currentTime
+        lastProgressAt = performance.now()
+      }, 120)
+    }
+
+    const hardRecover = () => {
+      if (recovering) return
+      recovering = true
+
+      /*
+        If the media element itself has stalled, simply calling play()
+        does not always recover it. Reload the same source and restart.
+      */
+      const source = video.currentSrc ||
+        video.querySelector('source')?.src
+
+      try {
+        video.pause()
+        video.load()
+      } catch {
+        // Keep the page alive if the browser rejects a media reset.
+      }
+
+      const resume = () => {
+        try {
+          video.currentTime = 0
+        } catch {
+          // Wait for metadata if seeking is not available yet.
+        }
+
+        safePlay()
+        recovering = false
+        lastTime = video.currentTime
+        lastProgressAt = performance.now()
+      }
+
+      if (video.readyState >= 2) {
+        resume()
+      } else {
+        video.addEventListener(
+          'loadeddata',
+          resume,
+          { once: true },
+        )
+      }
+
+      if (!source) {
+        recovering = false
       }
     }
 
-    const restartHero = () => {
-      try {
-        video.currentTime = 0.01
-      } catch {
-        // Ignore until seekable.
+    const monitor = () => {
+      if (document.hidden) return
+
+      const now = performance.now()
+      const duration = video.duration
+      const current = video.currentTime
+
+      if (
+        Number.isFinite(current) &&
+        Math.abs(current - lastTime) > 0.03
+      ) {
+        lastTime = current
+        lastProgressAt = now
       }
 
-      const playResult = video.play()
-      playResult?.catch?.(() => {})
+      if (
+        Number.isFinite(duration) &&
+        duration > 0 &&
+        current >= duration - 0.18
+      ) {
+        restartFromBeginning()
+        return
+      }
+
+      if (video.paused || video.ended) {
+        safePlay()
+      }
+
+      /*
+        If playback time has not advanced for 1.4 seconds while the
+        page is visible, treat it as a real stall and rebuild the
+        media pipeline rather than repeatedly calling play().
+      */
+      if (
+        !video.paused &&
+        now - lastProgressAt > 1400
+      ) {
+        hardRecover()
+      }
+    }
+
+    const resumeHero = () => {
+      if (document.hidden) return
+
+      lastTime = video.currentTime
+      lastProgressAt = performance.now()
+      safePlay()
     }
 
     video.dataset.shouldPlay = 'true'
     video.muted = true
     video.defaultMuted = true
-    video.loop = true
+    video.loop = false
     video.playsInline = true
 
-    video.addEventListener('ended', restartHero)
-    video.addEventListener('stalled', forceHeroPlayback)
-    video.addEventListener('waiting', forceHeroPlayback)
-    video.addEventListener('canplay', forceHeroPlayback)
-    video.addEventListener('loadeddata', forceHeroPlayback)
-    window.addEventListener('focus', forceHeroPlayback)
-    document.addEventListener('visibilitychange', forceHeroPlayback)
-
-    intervalId = window.setInterval(
-      forceHeroPlayback,
-      500,
+    video.addEventListener(
+      'ended',
+      restartFromBeginning,
+    )
+    video.addEventListener(
+      'error',
+      hardRecover,
+    )
+    window.addEventListener(
+      'focus',
+      resumeHero,
+    )
+    window.addEventListener(
+      'pageshow',
+      resumeHero,
+    )
+    document.addEventListener(
+      'visibilitychange',
+      resumeHero,
     )
 
-    forceHeroPlayback()
+    intervalId = window.setInterval(
+      monitor,
+      250,
+    )
+
+    resumeHero()
 
     return () => {
-      if (intervalId) {
-        window.clearInterval(intervalId)
-      }
-
-      video.removeEventListener('ended', restartHero)
-      video.removeEventListener('stalled', forceHeroPlayback)
-      video.removeEventListener('waiting', forceHeroPlayback)
-      video.removeEventListener('canplay', forceHeroPlayback)
-      video.removeEventListener('loadeddata', forceHeroPlayback)
-      window.removeEventListener('focus', forceHeroPlayback)
-      document.removeEventListener('visibilitychange', forceHeroPlayback)
+      window.clearInterval(intervalId)
+      video.removeEventListener(
+        'ended',
+        restartFromBeginning,
+      )
+      video.removeEventListener(
+        'error',
+        hardRecover,
+      )
+      window.removeEventListener(
+        'focus',
+        resumeHero,
+      )
+      window.removeEventListener(
+        'pageshow',
+        resumeHero,
+      )
+      document.removeEventListener(
+        'visibilitychange',
+        resumeHero,
+      )
     }
   }, [])
 
