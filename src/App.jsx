@@ -10,15 +10,14 @@ import FroidPage from './components/FroidPage.jsx'
 
 gsap.registerPlugin(ScrollTrigger, Draggable)
 
-const navigation = ['Home', 'About', 'Services', 'Portfolio', 'Testimonials', 'Contact']
+const navigation = ['Home', 'Services', 'About', 'Testimonials', 'Contact']
 
 /* ===== ACTIVE NAVIGATION SYSTEM ===== */
 
 const navigationTargets = {
   Home: '#home',
-  About: '#about',
   Services: '#services',
-  Portfolio: '#portfolio',
+  About: '#about',
   Testimonials: '#testimonials',
   Contact: '#contact',
 }
@@ -1720,19 +1719,19 @@ export default function App() {
         </section>
       </section>
 
-      <section className="chapter-page full-page-section" id="about">
+      <section className="chapter-page full-page-section" id="services">
         <div className="chapter-page-copy">
-          <p>03 / About</p>
-          <h2>About John Wolf.</h2>
-          <span>The designer, process, and point of view behind the work.</span>
+          <p>03 / Services</p>
+          <h2>What I build.</h2>
+          <span>Brand identity, digital experiences, campaign creative, and visual systems.</span>
         </div>
       </section>
 
-      <section className="chapter-page full-page-section" id="services">
+      <section className="chapter-page full-page-section" id="about">
         <div className="chapter-page-copy">
-          <p>04 / Services</p>
-          <h2>What I build.</h2>
-          <span>Brand identity, digital experiences, campaign creative, and visual systems.</span>
+          <p>04 / About</p>
+          <h2>About John Wolf.</h2>
+          <span>The designer, process, and point of view behind the work.</span>
         </div>
       </section>
 
