@@ -380,6 +380,66 @@ function materialForMesh(mesh, materials) {
   return materials.shell
 }
 
+
+function createLaptopBase(THREE, materials) {
+  const hinge = new THREE.Group()
+  hinge.name = 'RestoredMacBookBase'
+  hinge.position.set(0, -98, 4)
+  hinge.rotation.x = -1.08
+
+  const deck = new THREE.Mesh(
+    new THREE.BoxGeometry(350, 10, 226),
+    materials.shell,
+  )
+  deck.position.set(0, -5, 108)
+  deck.castShadow = true
+  deck.receiveShadow = true
+  hinge.add(deck)
+
+  const keyboardWell = new THREE.Mesh(
+    new THREE.BoxGeometry(272, 2.8, 104),
+    materials.dark,
+  )
+  keyboardWell.position.set(0, 1.4, 76)
+  keyboardWell.castShadow = true
+  keyboardWell.receiveShadow = true
+  hinge.add(keyboardWell)
+
+  const keyboard = new THREE.Mesh(
+    new THREE.BoxGeometry(252, 2, 88),
+    materials.keyboard,
+  )
+  keyboard.position.set(0, 3.1, 74)
+  keyboard.castShadow = true
+  hinge.add(keyboard)
+
+  const trackpad = new THREE.Mesh(
+    new THREE.BoxGeometry(132, 1.8, 72),
+    materials.trackpad,
+  )
+  trackpad.position.set(0, 3.2, 158)
+  trackpad.castShadow = true
+  hinge.add(trackpad)
+
+  const hingeBar = new THREE.Mesh(
+    new THREE.CylinderGeometry(5.2, 5.2, 292, 28),
+    materials.hinge,
+  )
+  hingeBar.rotation.z = Math.PI / 2
+  hingeBar.position.set(0, 0, 4)
+  hingeBar.castShadow = true
+  hinge.add(hingeBar)
+
+  const frontLip = new THREE.Mesh(
+    new THREE.BoxGeometry(118, 3, 5),
+    materials.dark,
+  )
+  frontLip.position.set(0, -0.5, 222)
+  hinge.add(frontLip)
+
+  return hinge
+}
+
 function getSceneLayout(camera, screenWidth) {
   const viewportWidth = window.innerWidth
   const viewportHeight = window.innerHeight
@@ -475,6 +535,9 @@ export function initStartProjectTransition({ THREE, OBJLoader }) {
   let modelLoadFailed = false
 
   const materials = createMaterials(THREE)
+  const restoredBase = createLaptopBase(THREE, materials)
+  laptopRoot.add(restoredBase)
+
   const loader = new OBJLoader()
   const modelReady = new Promise((resolve) => {
     loader.load(
