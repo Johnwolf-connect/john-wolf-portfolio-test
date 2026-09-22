@@ -3000,6 +3000,9 @@
     }
 
     function drawContainTexture(image, title) {
+      // Preserve the supplied logo artwork exactly:
+      // uniform scale only, centered, no crop, no blur,
+      // no dark overlay, and no independent width/height scaling.
       const width = 768
       const height = 1024
       const inset = 18
@@ -3009,13 +3012,7 @@
       output.height = height
 
       const context = output.getContext('2d')
-
-      /*
-        Preserve the supplied logo artwork exactly.
-        No blur, no dark overlay, no crop, no independent
-        width/height scaling, and no reprocessing effects.
-      */
-      context.fillStyle = '#0b0b0f'
+      context.fillStyle = '#ffffff'
       context.fillRect(0, 0, width, height)
 
       if (image?.naturalWidth && image?.naturalHeight) {
@@ -3035,9 +3032,9 @@
           drawHeight,
         )
       } else {
-        context.fillStyle = '#16161d'
+        context.fillStyle = '#ffffff'
         context.fillRect(0, 0, width, height)
-        context.fillStyle = '#fff'
+        context.fillStyle = '#111111'
         context.textAlign = 'center'
         context.textBaseline = 'middle'
         context.font = '700 48px Arial'
