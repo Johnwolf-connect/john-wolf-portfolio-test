@@ -2220,3 +2220,59 @@ body::-webkit-scrollbar,
     padding: 6.5rem 1.2rem 2rem;
   }
 }
+
+
+/* ===== SECTION 2 / GSAP OBSERVER ARCHIVE FLOW ===== */
+.archive-observer-stage {
+  position: absolute;
+  inset: 0;
+  display: block;
+  perspective: none;
+  overflow: hidden;
+}
+
+.archive-observer-section {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+}
+
+.archive-observer-outer,
+.archive-observer-inner {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.archive-observer-inner {
+  display: grid;
+  place-items: center;
+  padding-top: 2.5rem;
+}
+
+.archive-observer-section .carousel-card {
+  position: relative;
+  inset: auto;
+  width: var(--carousel-card-width);
+  height: var(--carousel-card-height);
+  transform: none;
+  backface-visibility: visible;
+  filter: saturate(1.08) brightness(1);
+  will-change: transform, opacity;
+}
+
+.archive-observer-section .carousel-card.is-active {
+  transform: none;
+}
+
+.portfolio-page .carousel-heading,
+.portfolio-page .carousel-active-copy,
+.portfolio-page .carousel-scroll-note {
+  z-index: 20;
+}
+
+@media (max-width: 820px) {
+  .archive-observer-inner {
+    padding-top: 4rem;
+  }
+}
