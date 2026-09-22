@@ -1082,78 +1082,11 @@ export default function App() {
           stagger: 0.08,
         }, '-=0.55')
 
-      const experienceTimeline = gsap.timeline({
-        defaults: { ease: 'none' },
-        scrollTrigger: {
-          trigger: experience.current,
-          start: 'top top',
-          end: 'bottom bottom',
-          scrub: 0.7,
-          invalidateOnRefresh: true,
-          onRefreshInit: setCardGeometry,
-          onUpdate: (self) => {
-            const carouselProgress = clamp((self.progress - 0.145) / 0.855, 0, 1)
-            const nextIndex = Math.round(carouselProgress * (carouselCards.length - 1))
-            setActiveCard((current) => (current === nextIndex ? current : nextIndex))
-          },
-        },
-      })
-
-      experienceTimeline
-        .to('.hero-interface', {
-          opacity: 0,
-          y: -28,
-          filter: 'blur(10px)',
-          duration: 0.035,
-          pointerEvents: 'none',
-        }, 0.012)
-        .to('.video-atmosphere', {
-          width: () =>
-            getComputedStyle(root.current)
-              .getPropertyValue('--carousel-card-width')
-              .trim(),
-          height: () =>
-            getComputedStyle(root.current)
-              .getPropertyValue('--carousel-card-height')
-              .trim(),
-          borderRadius: '1.45rem',
-          boxShadow: '0 36px 110px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(255, 255, 255, 0.22)',
-          duration: 0.105,
-          ease: 'power3.inOut',
-        }, 0.025)
-        .to('.video-vignette, .video-grain', {
-          opacity: 0,
-          duration: 0.055,
-          ease: 'power2.out',
-        }, 0.06)
-        .to('.carousel-interface', {
-          opacity: 1,
-          duration: 0.04,
-        }, 0.082)
-        .to(otherCards, {
-          opacity: 1,
-          duration: 0.045,
-          stagger: 0.0015,
-        }, 0.092)
-        .to('.home-card', {
-          opacity: 1,
-          duration: 0.018,
-        }, 0.112)
-        .to('.video-atmosphere', {
-          opacity: 0,
-          duration: 0.025,
-          pointerEvents: 'none',
-        }, 0.122)
-        .to('.home-card .carousel-card-shade, .home-card .carousel-card-content', {
-          opacity: 1,
-          duration: 0.025,
-          ease: 'power2.out',
-        }, 0.132)
-        .to(carouselRing.current, {
-          rotationY: -angleStep * (carouselCards.length - 1),
-          duration: 0.855,
-          ease: 'none',
-        }, 0.145)
+      gsap.set('.carousel-interface', { opacity: 1 })
+      gsap.set(otherCards, { opacity: 1 })
+      gsap.set('.home-card', { opacity: 1 })
+      gsap.set('.video-atmosphere', { opacity: 1 })
+      gsap.set(carouselRing.current, { rotationY: -angleStep })
 
       const onResize = () => {
         setCardGeometry()
@@ -1277,8 +1210,8 @@ export default function App() {
         </button>
       </header>
 
-      <section className="experience" id="home" ref={experience}>
-        <div className="experience-sticky" ref={stickyStage}>
+      <section className="experience" ref={experience}>
+        <div className="experience-sticky full-page-section" id="home" ref={stickyStage}>
           <div className={`video-atmosphere ${videoReady ? 'is-ready' : ''}`} aria-hidden="true">
             <video
               ref={heroVideo}
@@ -1364,7 +1297,10 @@ export default function App() {
             </button>
           </div>
 
-          <div className="carousel-interface" id="portfolio">
+        </div>
+
+        <section className="portfolio-page full-page-section" id="portfolio">
+          <div className="carousel-interface">
             <div className="carousel-heading">
               <p>02 / Design archive</p>
               <h2>Move through the work.</h2>
@@ -1493,20 +1429,40 @@ export default function App() {
               <i />
             </div>
           </div>
+        </section>
+      </section>
+
+      <section className="chapter-page full-page-section" id="about">
+        <div className="chapter-page-copy">
+          <p>03 / About</p>
+          <h2>About John Wolf.</h2>
+          <span>The designer, process, and point of view behind the work.</span>
         </div>
       </section>
 
-      <section className="next-stage" id="about">
-        <p>Scene 03</p>
-        <h2>The next transformation begins here.</h2>
-        <span>
-          This black stage is reserved for the transition that will follow the final Contact card.
-        </span>
+      <section className="chapter-page full-page-section" id="services">
+        <div className="chapter-page-copy">
+          <p>04 / Services</p>
+          <h2>What I build.</h2>
+          <span>Brand identity, digital experiences, campaign creative, and visual systems.</span>
+        </div>
       </section>
 
-      <section className="anchor-section" id="services" aria-hidden="true" />
-      <section className="anchor-section" id="testimonials" aria-hidden="true" />
-      <section className="anchor-section" id="contact" aria-hidden="true" />
+      <section className="chapter-page full-page-section" id="testimonials">
+        <div className="chapter-page-copy">
+          <p>05 / Testimonials</p>
+          <h2>What clients say.</h2>
+          <span>A dedicated full-screen stage for proof, outcomes, and client perspective.</span>
+        </div>
+      </section>
+
+      <section className="chapter-page full-page-section" id="contact">
+        <div className="chapter-page-copy">
+          <p>06 / Contact</p>
+          <h2>Start something.</h2>
+          <span>A full-screen closing chapter built around the next project.</span>
+        </div>
+      </section>
 
       {brandPageOpen && (
         <section
