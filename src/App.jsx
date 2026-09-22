@@ -1,14 +1,13 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { Observer } from 'gsap/Observer'
 import Lenis from 'lenis'
 import ExpertiseIcon from './components/ExpertiseIcon.jsx'
 import BrandVault from './components/BrandVault.jsx'
 import WebsitesPage from './components/WebsitesPage.jsx'
 import FroidPage from './components/FroidPage.jsx'
 
-gsap.registerPlugin(ScrollTrigger, Observer)
+gsap.registerPlugin(ScrollTrigger)
 
 const navigation = ['Home', 'About', 'Services', 'Portfolio', 'Testimonials', 'Contact']
 
@@ -152,14 +151,24 @@ function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max)
 }
 
+function getArchiveOffset(index, activeIndex, total) {
+  let offset = index - activeIndex
+  const halfway = total / 2
+
+  if (offset > halfway) offset -= total
+  if (offset < -halfway) offset += total
+
+  return offset
+}
+
 export default function App() {
   const root = useRef(null)
   const experience = useRef(null)
   const stickyStage = useRef(null)
   const portfolioStage = useRef(null)
+  const archiveDrag = useRef({ active: false, startX: 0, x: 0, dragged: false })
   const heroVideo = useRef(null)
   const homeCardVideo = useRef(null)
-  const carouselRing = useRef(null)
   const brandPageStage = useRef(null)
   const brandPageOriginVideo = useRef(null)
   const brandPageBackgroundVideo = useRef(null)
@@ -175,8 +184,6 @@ export default function App() {
   const [froidPageOpen, setFroidPageOpen] = useState(false)
   const [brandVaultOpen, setBrandVaultOpen] = useState(false)
   const [brandProjectIndex, setBrandProjectIndex] = useState(0)
-
-  const angleStep = useMemo(() => 360 / carouselCards.length, [])
 
   const activeBrandProject =
     brandGuidelineProjects[brandProjectIndex]
@@ -1031,295 +1038,55 @@ export default function App() {
   }, [activeCard, brandPageOpen])
 
   useLayoutEffect(() => {
-    const stage = portfolioStage.current
-    if (!stage) return undefined
+    const context = gsap.context(() => {
+      const reduceMotion = window.matchMedia(
+        '(prefers-reduced-motion: reduce)',
+      ).matches
 
-    const reduceMotion = window.matchMedia(
-      '(prefers-reduced-motion: reduce)',
-    ).matches
+      if (reduceMotion) return
 
-    const sections = gsap.utils.toArray(
-      '.archive-observer-section',
-      stage,
-    )
-    const outers = gsap.utils.toArray(
-      '.archive-observer-outer',
-      stage,
-    )
-    const inners = gsap.utils.toArray(
-      '.archive-observer-inner',
-      stage,
-    )
-    const cards = gsap.utils.toArray(
-      '.carousel-card',
-      stage,
-    )
+      gsap.set('[data-reveal]', {
+        y: 32,
+        opacity: 0,
+      })
+      gsap.set('.expertise-card', {
+        y: 38,
+        opacity: 0,
+      })
 
-    if (!sections.length) return undefined
-
-    let currentIndex = Math.min(
-      activeCard,
-      sections.length - 1,
-    )
-    let animating = false
-    let observer = null
-
-    gsap.set(sections, {
-      autoAlpha: 0,
-      zIndex: 0,
-    })
-    gsap.set(outers, { yPercent: 100 })
-    gsap.set(inners, { yPercent: -100 })
-
-    gsap.set(sections[currentIndex], {
-      autoAlpha: 1,
-      zIndex: 2,
-    })
-    gsap.set(
-      [
-        outers[currentIndex],
-        inners[currentIndex],
-      ],
-      { yPercent: 0 },
-    )
-
-    if (reduceMotion) {
-      return undefined
-    }
-
-    const releaseToSection = (selector) => {
-      observer?.disable()
-      document
-        .querySelector(selector)
-        ?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
+      gsap
+        .timeline({
+          defaults: { ease: 'power3.out' },
         })
-
-      window.setTimeout(() => {
-        observer?.enable()
-      }, 900)
-    }
-
-    const gotoSection = (index, direction) => {
-      if (
-        animating ||
-        index < 0 ||
-        index >= sections.length
-      ) {
-        return
-      }
-
-      animating = true
-
-      const dFactor =
-        direction === -1 ? -1 : 1
-
-      const previousIndex = currentIndex
-      const nextSection = sections[index]
-      const previousSection =
-        sections[previousIndex]
-
-      gsap.set(previousSection, {
-        zIndex: 1,
-      })
-
-      gsap.set(nextSection, {
-        autoAlpha: 1,
-        zIndex: 2,
-      })
-
-      const timeline = gsap.timeline({
-        defaults: {
-          duration: 1.05,
-          ease: 'power3.inOut',
-        },
-        onComplete: () => {
-          gsap.set(previousSection, {
-            autoAlpha: 0,
-          })
-          currentIndex = index
-          setActiveCard(index)
-          animating = false
-        },
-      })
-
-      timeline
-        .fromTo(
-          [
-            outers[index],
-            inners[index],
-          ],
+        .from('.site-header', {
+          y: -24,
+          opacity: 0,
+          duration: 0.8,
+        })
+        .to(
+          '[data-reveal]',
           {
-            yPercent: (i) =>
-              i
-                ? -100 * dFactor
-                : 100 * dFactor,
-          },
-          {
-            yPercent: 0,
-          },
-          0,
-        )
-        .fromTo(
-          cards[index],
-          {
-            yPercent: 16 * dFactor,
-            scale: 0.94,
-            opacity: 0.35,
-          },
-          {
-            yPercent: 0,
-            scale: 1,
+            y: 0,
             opacity: 1,
-            duration: 1.12,
+            duration: 0.9,
+            stagger: 0.09,
           },
-          0,
+          '-=0.35',
         )
         .to(
-          cards[previousIndex],
+          '.expertise-card',
           {
-            yPercent: -14 * dFactor,
-            scale: 0.94,
-            opacity: 0.22,
-            duration: 0.9,
-          },
-          0,
-        )
-        .fromTo(
-          cards[index].querySelector(
-            '.carousel-card-content',
-          ),
-          {
-            autoAlpha: 0,
-            y: 34 * dFactor,
-          },
-          {
-            autoAlpha: 1,
             y: 0,
-            duration: 0.68,
-            ease: 'power3.out',
+            opacity: 1,
+            duration: 0.85,
+            stagger: 0.08,
           },
-          0.28,
+          '-=0.55',
         )
-    }
-
-    observer = Observer.create({
-      target: stage,
-      type: 'wheel,touch,pointer',
-      wheelSpeed: -1,
-      tolerance: 12,
-      preventDefault: true,
-      onDown: () => {
-        if (animating) return
-
-        if (currentIndex === 0) {
-          releaseToSection('#home')
-          return
-        }
-
-        gotoSection(
-          currentIndex - 1,
-          -1,
-        )
-      },
-      onUp: () => {
-        if (animating) return
-
-        if (
-          currentIndex ===
-          sections.length - 1
-        ) {
-          releaseToSection('#about')
-          return
-        }
-
-        gotoSection(
-          currentIndex + 1,
-          1,
-        )
-      },
-    })
-
-    return () => {
-      observer?.kill()
-    }
-  }, [])
-
-  useLayoutEffect(() => {
-    const context = gsap.context(() => {
-      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      const cards = gsap.utils.toArray('.carousel-card')
-      const otherCards = cards.slice(1)
-
-      const setCardGeometry = () => {
-        const mobile = window.innerWidth <= 700
-        const cardWidth = mobile
-          ? Math.min(window.innerWidth * 0.72, 300)
-          : Math.min(window.innerWidth * 0.235, 350)
-        const cardHeight = cardWidth * 1.38
-        const cardGap = mobile ? 28 : 56
-        const radius =
-          (cardWidth + cardGap) /
-          (2 * Math.sin(Math.PI / carouselCards.length))
-
-        root.current?.style.setProperty('--carousel-card-width', `${cardWidth}px`)
-        root.current?.style.setProperty('--carousel-card-height', `${cardHeight}px`)
-        root.current?.style.setProperty('--carousel-radius', `${radius}px`)
-        root.current?.style.setProperty('--video-scale-x', `${cardWidth / window.innerWidth}`)
-        root.current?.style.setProperty('--video-scale-y', `${cardHeight / window.innerHeight}`)
-      }
-
-      setCardGeometry()
-
-      if (reduceMotion) {
-        gsap.set('.hero-interface, .carousel-interface, .carousel-card', { clearProps: 'all' })
-        return
-      }
-
-      gsap.set('[data-reveal]', { y: 32, opacity: 0 })
-      gsap.set('.expertise-card', { y: 38, opacity: 0 })
-      gsap.set('.carousel-interface', { opacity: 0 })
-      gsap.set(otherCards, { opacity: 0 })
-      gsap.set('.home-card', { opacity: 0 })
-      gsap.set(carouselRing.current, { rotationY: 0 })
-
-      const intro = gsap.timeline({ defaults: { ease: 'power3.out' } })
-      intro
-        .from('.site-header', { y: -24, opacity: 0, duration: 0.8 })
-        .to('[data-reveal]', {
-          y: 0,
-          opacity: 1,
-          duration: 0.9,
-          stagger: 0.09,
-        }, '-=0.35')
-        .to('.expertise-card', {
-          y: 0,
-          opacity: 1,
-          duration: 0.85,
-          stagger: 0.08,
-        }, '-=0.55')
-
-      gsap.set('.carousel-interface', { opacity: 1 })
-      gsap.set(otherCards, { opacity: 1 })
-      gsap.set('.home-card', { opacity: 1 })
-      gsap.set('.video-atmosphere', { opacity: 1 })
-      gsap.set(carouselRing.current, { rotationY: -angleStep })
-
-      const onResize = () => {
-        setCardGeometry()
-        ScrollTrigger.refresh()
-      }
-
-      window.addEventListener('resize', onResize)
-
-      return () => {
-        window.removeEventListener('resize', onResize)
-      }
     }, root)
 
     return () => context.revert()
-  }, [angleStep])
+  }, [])
 
   const handleCardPointer = (event) => {
     const card = event.currentTarget
@@ -1533,132 +1300,190 @@ export default function App() {
             </div>
 
             <div
-              className="carousel-viewport archive-observer-stage"
+              className="carousel-viewport archive-drag-stage"
               aria-label="Graphic design portfolio categories"
               ref={portfolioStage}
+              onPointerDown={(event) => {
+                const stage = portfolioStage.current
+                if (!stage) return
+
+                archiveDrag.current = {
+                  active: true,
+                  startX: event.clientX,
+                  x: event.clientX,
+                  dragged: false,
+                }
+
+                stage.setPointerCapture?.(event.pointerId)
+                stage.classList.add('is-dragging')
+              }}
+              onPointerMove={(event) => {
+                const stage = portfolioStage.current
+                const drag = archiveDrag.current
+
+                if (!stage || !drag.active) return
+
+                drag.x = event.clientX
+                const delta = drag.x - drag.startX
+
+                if (Math.abs(delta) > 6) {
+                  drag.dragged = true
+                }
+
+                stage.style.setProperty(
+                  '--drag-x',
+                  `${delta}px`,
+                )
+              }}
+              onPointerUp={(event) => {
+                const stage = portfolioStage.current
+                const drag = archiveDrag.current
+
+                if (!stage || !drag.active) return
+
+                const delta = event.clientX - drag.startX
+                const threshold = Math.min(
+                  90,
+                  window.innerWidth * 0.1,
+                )
+
+                drag.active = false
+                stage.classList.remove('is-dragging')
+                stage.style.setProperty('--drag-x', '0px')
+
+                if (Math.abs(delta) >= threshold) {
+                  setActiveCard((current) => {
+                    const direction = delta < 0 ? 1 : -1
+
+                    return (
+                      current +
+                      direction +
+                      carouselCards.length
+                    ) % carouselCards.length
+                  })
+                }
+
+                window.setTimeout(() => {
+                  archiveDrag.current.dragged = false
+                }, 0)
+              }}
+              onPointerCancel={() => {
+                const stage = portfolioStage.current
+                archiveDrag.current.active = false
+                archiveDrag.current.dragged = false
+                stage?.classList.remove('is-dragging')
+                stage?.style.setProperty('--drag-x', '0px')
+              }}
             >
-              {carouselCards.map((card, index) => (
-                <div
-                  className="archive-observer-section"
-                  key={card.title}
-                >
-                  <div className="archive-observer-outer">
-                    <div className="archive-observer-inner">
-                      <article
-                        className={`carousel-card ${activeCard === index ? 'is-active' : ''} ${card.title === 'Brand Guidelines' || card.title === 'Logos' || card.title === 'Websites' ? 'is-brand-page-trigger' : ''}`}
-                        aria-label={card.title}
-                        role={
-                          card.title === 'Logos' ||
-                          card.title === 'Brand Guidelines' ||
-                          card.title === 'Websites'
-                            ? 'button'
-                            : undefined
+              <div className="archive-drag-track">
+                {carouselCards.map((card, index) => {
+                  const offset = getArchiveOffset(
+                    index,
+                    activeCard,
+                    carouselCards.length,
+                  )
+                  const distance = Math.abs(offset)
+                  const visible = distance <= 3
+
+                  return (
+                    <article
+                      className={`carousel-card archive-drag-card ${offset === 0 ? 'is-active' : ''} ${visible ? '' : 'is-hidden'} ${card.title === 'Brand Guidelines' || card.title === 'Logos' || card.title === 'Websites' ? 'is-brand-page-trigger' : ''}`}
+                      style={{
+                        '--archive-offset': offset,
+                        '--archive-distance': distance,
+                      }}
+                      key={card.title}
+                      aria-label={card.title}
+                      role="button"
+                      tabIndex={offset === 0 ? 0 : -1}
+                      onClick={(event) => {
+                        if (archiveDrag.current.dragged) {
+                          event.preventDefault()
+                          return
                         }
-                        tabIndex={
-                          (
-                            card.title === 'Logos' ||
-                            card.title === 'Brand Guidelines' ||
-                            card.title === 'Websites'
-                          ) &&
-                          activeCard === index
-                            ? 0
-                            : undefined
+
+                        if (offset !== 0) {
+                          setActiveCard(index)
+                          return
                         }
-                        onClick={(event) => {
-                          if (
-                            card.title === 'Logos' &&
-                            activeCard === index
-                          ) {
-                            event.preventDefault()
-                            openLogosPage(event)
-                            return
-                          }
 
-                          if (
-                            card.title === 'Brand Guidelines' &&
-                            activeCard === index
-                          ) {
-                            openBrandGuidelines(event)
-                            return
-                          }
+                        if (card.title === 'Logos') {
+                          event.preventDefault()
+                          openLogosPage(event)
+                          return
+                        }
 
-                          if (
-                            card.title === 'Websites' &&
-                            activeCard === index
-                          ) {
-                            openWebsitesPage()
-                          }
-                        }}
-                        onKeyDown={(event) => {
-                          const isActivationKey =
-                            event.key === 'Enter' ||
-                            event.key === ' '
+                        if (card.title === 'Brand Guidelines') {
+                          openBrandGuidelines(event)
+                          return
+                        }
 
-                          if (
-                            card.title === 'Logos' &&
-                            activeCard === index &&
-                            isActivationKey
-                          ) {
-                            event.preventDefault()
-                            openLogosPage(event)
-                            return
-                          }
+                        if (card.title === 'Websites') {
+                          openWebsitesPage()
+                        }
+                      }}
+                      onKeyDown={(event) => {
+                        const activate =
+                          event.key === 'Enter' ||
+                          event.key === ' '
 
-                          if (
-                            card.title === 'Brand Guidelines' &&
-                            activeCard === index &&
-                            isActivationKey
-                          ) {
-                            event.preventDefault()
-                            openBrandGuidelines(event)
-                            return
-                          }
+                        if (!activate) return
+                        event.preventDefault()
 
-                          if (
-                            card.title === 'Websites' &&
-                            activeCard === index &&
-                            isActivationKey
-                          ) {
-                            event.preventDefault()
-                            openWebsitesPage()
-                          }
-                        }}
-                      >
-                        <div className="carousel-card-video">
-                          <video
-                            muted
-                            loop
-                            playsInline
-                            preload={
-                              index === 0
-                                ? 'auto'
-                                : 'metadata'
-                            }
-                            poster={card.poster}
-                            aria-hidden="true"
-                          >
-                            <source
-                              src={card.video}
-                              type="video/mp4"
-                            />
-                          </video>
-                          <div className="carousel-card-shade" />
-                        </div>
+                        if (offset !== 0) {
+                          setActiveCard(index)
+                          return
+                        }
 
-                        <div className="carousel-card-content">
-                          <p>{card.eyebrow}</p>
-                          <h3>{card.title}</h3>
-                          <span>View collection ↗</span>
-                        </div>
-                      </article>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                        if (card.title === 'Logos') {
+                          openLogosPage(event)
+                          return
+                        }
+
+                        if (card.title === 'Brand Guidelines') {
+                          openBrandGuidelines(event)
+                          return
+                        }
+
+                        if (card.title === 'Websites') {
+                          openWebsitesPage()
+                        }
+                      }}
+                    >
+                      <div className="carousel-card-video">
+                        <video
+                          muted
+                          loop
+                          playsInline
+                          preload={
+                            offset === 0
+                              ? 'auto'
+                              : 'metadata'
+                          }
+                          poster={card.poster}
+                          aria-hidden="true"
+                        >
+                          <source
+                            src={card.video}
+                            type="video/mp4"
+                          />
+                        </video>
+                        <div className="carousel-card-shade" />
+                      </div>
+
+                      <div className="carousel-card-content">
+                        <p>{card.eyebrow}</p>
+                        <h3>{card.title}</h3>
+                        <span>View collection ↗</span>
+                      </div>
+                    </article>
+                  )
+                })}
+              </div>
             </div>
 
             <div className="carousel-scroll-note">
-              <span>Continue scrolling</span>
+              <span>Drag / swipe to explore</span>
               <i />
             </div>
           </div>
