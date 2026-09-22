@@ -1210,6 +1210,89 @@ export default function App() {
   }, [brandPageOpen])
 
   useEffect(() => {
+    const video = heroVideo.current
+    if (!video) return undefined
+
+    let intervalId = null
+    let restarting = false
+
+    const forceHeroPlayback = () => {
+      if (!video || restarting) return
+
+      const duration = video.duration
+      const nearEnd =
+        Number.isFinite(duration) &&
+        duration > 0 &&
+        video.currentTime >= duration - 0.12
+
+      if (nearEnd || video.ended) {
+        restarting = true
+        try {
+          video.currentTime = 0.01
+        } catch {
+          // Ignore seek errors while metadata is refreshing.
+        }
+
+        const playResult = video.play()
+        playResult?.catch?.(() => {})
+        restarting = false
+        return
+      }
+
+      if (video.paused && document.visibilityState === 'visible') {
+        const playResult = video.play()
+        playResult?.catch?.(() => {})
+      }
+    }
+
+    const restartHero = () => {
+      try {
+        video.currentTime = 0.01
+      } catch {
+        // Ignore until seekable.
+      }
+
+      const playResult = video.play()
+      playResult?.catch?.(() => {})
+    }
+
+    video.dataset.shouldPlay = 'true'
+    video.muted = true
+    video.defaultMuted = true
+    video.loop = true
+    video.playsInline = true
+
+    video.addEventListener('ended', restartHero)
+    video.addEventListener('stalled', forceHeroPlayback)
+    video.addEventListener('waiting', forceHeroPlayback)
+    video.addEventListener('canplay', forceHeroPlayback)
+    video.addEventListener('loadeddata', forceHeroPlayback)
+    window.addEventListener('focus', forceHeroPlayback)
+    document.addEventListener('visibilitychange', forceHeroPlayback)
+
+    intervalId = window.setInterval(
+      forceHeroPlayback,
+      500,
+    )
+
+    forceHeroPlayback()
+
+    return () => {
+      if (intervalId) {
+        window.clearInterval(intervalId)
+      }
+
+      video.removeEventListener('ended', restartHero)
+      video.removeEventListener('stalled', forceHeroPlayback)
+      video.removeEventListener('waiting', forceHeroPlayback)
+      video.removeEventListener('canplay', forceHeroPlayback)
+      video.removeEventListener('loadeddata', forceHeroPlayback)
+      window.removeEventListener('focus', forceHeroPlayback)
+      document.removeEventListener('visibilitychange', forceHeroPlayback)
+    }
+  }, [])
+
+  useEffect(() => {
     const source = heroVideo.current
     const destination = homeCardVideo.current
     if (!source || !destination) return undefined
