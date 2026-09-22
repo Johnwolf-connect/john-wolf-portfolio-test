@@ -430,7 +430,7 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
   let modelLoaded = false
   let modelLoadFailed = false
 
-  let screenNode = null
+  let screenSurface = null
   const loader = new GLTFLoader()
 
   const modelReady = new Promise((resolve) => {
@@ -438,10 +438,29 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
       MODEL_URL,
       (gltf) => {
         const model = gltf.scene
-        screenNode = model.getObjectByName('Lid')
 
         model.traverse((child) => {
           if (!child.isMesh) return
+
+          const materials = Array.isArray(child.material)
+            ? child.material
+            : [child.material]
+
+          const isWallpaperSurface = materials.some(
+            (material) => material?.name === 'LCD',
+          )
+
+          if (isWallpaperSurface) {
+            /*
+              The GLB's "Macbook Pro wallpaper" texture is assigned
+              to the LCD material. Hide only that mesh so the live
+              portfolio page replaces the wallpaper exactly.
+            */
+            screenSurface = child
+            child.visible = false
+            return
+          }
+
           child.castShadow = true
           child.receiveShadow = true
         })
@@ -478,7 +497,7 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
   }
 
   function getScreenCorners() {
-    if (!screenNode) {
+    if (!screenSurface) {
       const halfWidth = screenWidth / 2
       const halfHeight = layout.screenHeight / 2
 
@@ -492,19 +511,32 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
       )
     }
 
-    const left = -0.17573646
-    const right = 0.17573646
-    const bottom = 0.01373661
-    const top = 0.24269208
-    const surface = 0.00515
+    const geometry = screenSurface.geometry
+
+    if (!geometry.boundingBox) {
+      geometry.computeBoundingBox()
+    }
+
+    const bounds = geometry.boundingBox
+    const insetX =
+      (bounds.max.x - bounds.min.x) * 0.004
+    const insetZ =
+      (bounds.max.z - bounds.min.z) * 0.004
+
+    const left = bounds.min.x + insetX
+    const right = bounds.max.x - insetX
+    const bottom = bounds.min.z + insetZ
+    const top = bounds.max.z - insetZ
+    const surfaceY =
+      (bounds.min.y + bounds.max.y) / 2
 
     return [
-      new THREE.Vector3(left, surface, top),
-      new THREE.Vector3(right, surface, top),
-      new THREE.Vector3(right, surface, bottom),
-      new THREE.Vector3(left, surface, bottom),
+      new THREE.Vector3(left, surfaceY, top),
+      new THREE.Vector3(right, surfaceY, top),
+      new THREE.Vector3(right, surfaceY, bottom),
+      new THREE.Vector3(left, surfaceY, bottom),
     ].map((corner) =>
-      screenNode.localToWorld(corner),
+      screenSurface.localToWorld(corner),
     )
   }
 
