@@ -2222,57 +2222,168 @@ body::-webkit-scrollbar,
 }
 
 
-/* ===== SECTION 2 / GSAP OBSERVER ARCHIVE FLOW ===== */
-.archive-observer-stage {
+/* ===== SECTION 2 / HORIZONTAL DRAG + SWIPE ARCHIVE ===== */
+.archive-drag-stage {
+  --drag-x: 0px;
   position: absolute;
   inset: 0;
   display: block;
-  perspective: none;
   overflow: hidden;
+  perspective: 1200px;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-.archive-observer-section {
+.archive-drag-stage.is-dragging {
+  cursor: grabbing;
+}
+
+.archive-drag-track {
   position: absolute;
   inset: 0;
-  visibility: hidden;
-}
-
-.archive-observer-outer,
-.archive-observer-inner {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-
-.archive-observer-inner {
   display: grid;
   place-items: center;
-  padding-top: 2.5rem;
+  transform-style: preserve-3d;
 }
 
-.archive-observer-section .carousel-card {
-  position: relative;
+.archive-drag-card {
+  position: absolute;
   inset: auto;
-  width: var(--carousel-card-width);
-  height: var(--carousel-card-height);
-  transform: none;
-  backface-visibility: visible;
-  filter: saturate(1.08) brightness(1);
+  left: 50%;
+  top: 50%;
+  width: clamp(240px, 25vw, 360px);
+  height: auto;
+  aspect-ratio: 0.725;
+  transform:
+    translate3d(
+      calc(
+        -50% +
+        (var(--archive-offset) * clamp(175px, 24vw, 330px)) +
+        var(--drag-x)
+      ),
+      -50%,
+      calc(var(--archive-distance) * -72px)
+    )
+    rotateY(calc(var(--archive-offset) * -8deg))
+    scale(calc(1 - (var(--archive-distance) * 0.16)));
+  transform-origin: 50% 50%;
+  opacity: calc(1 - (var(--archive-distance) * 0.19));
+  filter:
+    saturate(calc(1.05 - (var(--archive-distance) * 0.12)))
+    brightness(calc(1 - (var(--archive-distance) * 0.13)));
+  transition:
+    transform 560ms cubic-bezier(.2,.75,.2,1),
+    opacity 420ms ease,
+    filter 420ms ease,
+    border-color 260ms ease,
+    box-shadow 260ms ease;
   will-change: transform, opacity;
+  backface-visibility: hidden;
+  pointer-events: auto;
 }
 
-.archive-observer-section .carousel-card.is-active {
-  transform: none;
+.archive-drag-stage.is-dragging .archive-drag-card {
+  transition:
+    opacity 180ms ease,
+    filter 180ms ease;
+}
+
+.archive-drag-card.is-active {
+  z-index: 20;
+  opacity: 1;
+  filter: saturate(1.08) brightness(1);
+  border-color: rgba(255,255,255,.68);
+  box-shadow:
+    0 42px 120px rgba(0,0,0,.76),
+    0 0 58px rgba(121,74,255,.14),
+    inset 0 1px 0 rgba(255,255,255,.17);
+}
+
+.archive-drag-card:not(.is-active) {
+  cursor: pointer;
+}
+
+.archive-drag-card.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.archive-drag-card .carousel-card-content {
+  transition: opacity 260ms ease, transform 360ms ease;
+}
+
+.archive-drag-card:not(.is-active) .carousel-card-content {
+  opacity: .5;
+  transform: scale(.96);
 }
 
 .portfolio-page .carousel-heading,
 .portfolio-page .carousel-active-copy,
 .portfolio-page .carousel-scroll-note {
-  z-index: 20;
+  z-index: 30;
+  pointer-events: none;
 }
 
-@media (max-width: 820px) {
-  .archive-observer-inner {
-    padding-top: 4rem;
+.portfolio-page .carousel-scroll-note {
+  gap: .85rem;
+}
+
+@media (max-width: 900px) {
+  .archive-drag-card {
+    width: clamp(220px, 34vw, 320px);
+    transform:
+      translate3d(
+        calc(
+          -50% +
+          (var(--archive-offset) * clamp(150px, 31vw, 275px)) +
+          var(--drag-x)
+        ),
+        -50%,
+        calc(var(--archive-distance) * -54px)
+      )
+      rotateY(calc(var(--archive-offset) * -6deg))
+      scale(calc(1 - (var(--archive-distance) * 0.15)));
+  }
+}
+
+@media (max-width: 650px) {
+  .archive-drag-stage {
+    touch-action: pan-y;
+  }
+
+  .archive-drag-card {
+    width: min(68vw, 290px);
+    transform:
+      translate3d(
+        calc(
+          -50% +
+          (var(--archive-offset) * 58vw) +
+          var(--drag-x)
+        ),
+        -50%,
+        calc(var(--archive-distance) * -36px)
+      )
+      rotateY(calc(var(--archive-offset) * -4deg))
+      scale(calc(1 - (var(--archive-distance) * 0.14)));
+  }
+
+  .portfolio-page .carousel-heading {
+    top: 5.75rem;
+  }
+
+  .portfolio-page .carousel-active-copy {
+    width: 46vw;
+    bottom: 1.2rem;
+  }
+
+  .portfolio-page .carousel-active-copy small {
+    display: none;
+  }
+
+  .portfolio-page .carousel-scroll-note {
+    left: 1rem;
+    bottom: 1.2rem;
   }
 }
