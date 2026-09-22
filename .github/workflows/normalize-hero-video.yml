@@ -1,0 +1,56 @@
+name: Normalize hero video
+
+on:
+  push:
+    paths:
+      - '.github/workflows/normalize-hero-video.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ffmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Normalize hero video in place
+        run: |
+          input='public/assets/hero-neon.mp4'
+          output='/tmp/hero-neon-normalized.mp4'
+
+          ffmpeg -y -i "$input" \
+            -map 0:v:0 \
+            -an \
+            -c:v libx264 \
+            -preset medium \
+            -crf 18 \
+            -pix_fmt yuv420p \
+            -movflags +faststart \
+            -fflags +genpts \
+            -avoid_negative_ts make_zero \
+            "$output"
+
+          test -s "$output"
+          mv "$output" "$input"
+
+          echo '--- normalized media ---'
+          ffprobe -v error -show_entries \
+            stream=codec_name,profile,pix_fmt,r_frame_rate,avg_frame_rate,duration \
+            -show_entries format=duration,start_time,size \
+            -of default=noprint_wrappers=1 \
+            "$input"
+
+      - name: Commit normalized hero video
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/assets/hero-neon.mp4
+          git diff --cached --quiet && exit 0
+          git commit -m 'Normalize hero video for native browser looping'
+          git push
