@@ -51,6 +51,13 @@ const expertise = [
 
 const carouselCards = [
   {
+    title: 'Home',
+    eyebrow: 'Opening scene',
+    description: 'Return to the beginning of the experience.',
+    video: '/assets/hero-neon.mp4',
+    poster: '/assets/hero-neon-poster.png',
+  },
+  {
     title: 'Logos',
     eyebrow: 'Identity marks',
     description: 'Distinctive symbols and signature systems made to be remembered.',
@@ -77,6 +84,20 @@ const carouselCards = [
     description: 'Original visuals built to give campaigns and stories their own character.',
     video: '/assets/carousel/illustrations.mp4',
     poster: '/assets/carousel/illustrations.jpg',
+  },
+  {
+    title: 'About',
+    eyebrow: 'The designer',
+    description: 'The thinking, standards, and experience behind the work.',
+    video: '/assets/carousel/about.mp4',
+    poster: '/assets/carousel/about.jpg',
+  },
+  {
+    title: 'Contact',
+    eyebrow: 'Start something',
+    description: 'Bring the idea. We will shape the visual experience around it.',
+    video: '/assets/carousel/contact.mp4',
+    poster: '/assets/carousel/contact.jpg',
   },
 ]
 
@@ -1561,7 +1582,7 @@ export default function App() {
           <div className="carousel-interface">
             <div className="carousel-heading">
               <p>Services</p>
-              <h2>Move through the services.</h2>
+              <h2>Move through the work.</h2>
             </div>
 
             <div className="carousel-active-copy" aria-live="polite">
