@@ -167,6 +167,7 @@ export default function App() {
   const stickyStage = useRef(null)
   const portfolioStage = useRef(null)
   const archiveDrag = useRef({ active: false, startX: 0, x: 0, dragged: false })
+  const archiveWheelLocked = useRef(false)
   const heroVideo = useRef(null)
   const homeCardVideo = useRef(null)
   const brandPageStage = useRef(null)
@@ -1388,6 +1389,12 @@ export default function App() {
 
                 event.preventDefault()
 
+                if (archiveWheelLocked.current) {
+                  return
+                }
+
+                archiveWheelLocked.current = true
+
                 const direction =
                   event.deltaX > 0 ? 1 : -1
 
@@ -1398,6 +1405,10 @@ export default function App() {
                     carouselCards.length
                   ) % carouselCards.length,
                 )
+
+                window.setTimeout(() => {
+                  archiveWheelLocked.current = false
+                }, 420)
               }}
             >
               <div className="archive-drag-track">
