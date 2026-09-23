@@ -1,0 +1,26 @@
+name: Audit portfolio videos
+
+on:
+  push:
+    paths:
+      - '.github/workflows/audit-portfolio-videos.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          sudo apt-get update >/dev/null
+          sudo apt-get install -y ffmpeg >/dev/null
+      - name: Decode every portfolio video
+        run: |
+          find public/assets -type f \( -iname '*.mp4' -o -iname '*.webm' \) -print0 |
+          while IFS= read -r -d '' f; do
+            echo "===== $f ====="
+            ffmpeg -v error -i "$f" -f null - 2>&1 | head -n 12 || true
+            echo
+          done
