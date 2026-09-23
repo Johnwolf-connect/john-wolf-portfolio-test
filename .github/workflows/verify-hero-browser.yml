@@ -27,7 +27,7 @@ jobs:
 
       - name: Verify live hero playback across loops
         env:
-          TEST_URL: https://john-wolf-portfolio-test-flz4rgxfq-johnwolf-connects-projects.vercel.app/
+          TEST_URL: https://john-wolf-portfolio-test-bl3uluyte-johnwolf-connects-projects.vercel.app/
         run: |
           node <<'NODE'
           const { chromium } = require('playwright');
