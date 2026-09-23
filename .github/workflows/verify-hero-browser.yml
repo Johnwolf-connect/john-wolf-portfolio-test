@@ -1,0 +1,98 @@
+name: Verify hero loop in browser
+
+on:
+  push:
+    paths:
+      - '.github/workflows/verify-hero-browser.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1 || true
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Verify live hero playback across loops
+        env:
+          TEST_URL: https://john-wolf-portfolio-test-flz4rgxfq-johnwolf-connects-projects.vercel.app/
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+
+          (async () => {
+            const browser = await chromium.launch({ headless: true });
+            const page = await browser.newPage();
+
+            page.on('console', msg => console.log('BROWSER_CONSOLE:', msg.type(), msg.text()));
+            page.on('pageerror', err => console.log('PAGE_ERROR:', err.message));
+
+            await page.goto(process.env.TEST_URL, { waitUntil: 'networkidle', timeout: 120000 });
+
+            await page.waitForSelector('.hero-video', { timeout: 30000 });
+
+            const initial = await page.$eval('.hero-video', v => ({
+              duration: v.duration,
+              currentTime: v.currentTime,
+              paused: v.paused,
+              ended: v.ended,
+              readyState: v.readyState,
+              networkState: v.networkState,
+              src: v.currentSrc,
+            }));
+            console.log('INITIAL', JSON.stringify(initial));
+
+            let previous = initial.currentTime;
+            let loopCount = 0;
+            let stalledSamples = 0;
+
+            for (let i = 0; i < 80; i++) {
+              await page.waitForTimeout(500);
+              const s = await page.$eval('.hero-video', v => ({
+                t: Number(v.currentTime.toFixed(3)),
+                duration: Number(v.duration.toFixed(3)),
+                paused: v.paused,
+                ended: v.ended,
+                readyState: v.readyState,
+                networkState: v.networkState,
+              }));
+
+              console.log('SAMPLE', i, JSON.stringify(s));
+
+              if (s.t + 0.5 < previous) loopCount++;
+              if (Math.abs(s.t - previous) < 0.02 && !s.paused) stalledSamples++;
+              else stalledSamples = 0;
+
+              if (s.paused || s.ended || stalledSamples >= 6) {
+                console.error('FAIL_STATE', JSON.stringify({i, previous, loopCount, stalledSamples, ...s}));
+                await browser.close();
+                process.exit(1);
+              }
+
+              previous = s.t;
+            }
+
+            console.log('RESULT', JSON.stringify({loopCount}));
+            await browser.close();
+
+            if (loopCount < 2) {
+              console.error('FAIL: expected at least 2 completed loops');
+              process.exit(1);
+            }
+          })().catch(err => {
+            console.error(err);
+            process.exit(1);
+          });
+          NODE
