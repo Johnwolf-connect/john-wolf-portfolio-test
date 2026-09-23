@@ -1,0 +1,28 @@
+name: Test recovered hero binary
+
+on:
+  push:
+    paths:
+      - '.github/workflows/test-recovered-hero.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Restore recovered candidate
+        run: |
+          git show 3e7718fbb9f44bac3b1392cdaffaa83c1735ee92:public/assets/hero-neon.mp4 > public/assets/hero-neon.mp4
+          test -s public/assets/hero-neon.mp4
+      - name: Commit candidate
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/assets/hero-neon.mp4
+          git commit -m 'Test recovered hero video binary'
+          git push
