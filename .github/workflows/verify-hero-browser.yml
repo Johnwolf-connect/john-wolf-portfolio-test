@@ -36,21 +36,21 @@ jobs:
             const browser = await chromium.launch({ channel: 'chrome', headless: true });
             const page = await browser.newPage();
 
-    await page.addInitScript(() => {
-      const originalPause =
-        HTMLMediaElement.prototype.pause
+            await page.addInitScript(() => {
+              const originalPause =
+                HTMLMediaElement.prototype.pause
 
-      HTMLMediaElement.prototype.pause = function (...args) {
-        if (this.classList?.contains('hero-video')) {
-          console.error(
-            'HERO_PAUSE_TRACE',
-            new Error('hero pause caller').stack,
-          )
-        }
+              HTMLMediaElement.prototype.pause = function (...args) {
+                if (this.classList?.contains('hero-video')) {
+                  console.error(
+                    'HERO_PAUSE_TRACE',
+                    new Error('hero pause caller').stack,
+                  )
+                }
 
-        return originalPause.apply(this, args)
-      }
-    });
+                return originalPause.apply(this, args)
+              }
+            });
 
             page.on('console', msg => console.log('BROWSER_CONSOLE:', msg.type(), msg.text()));
             page.on('pageerror', err => console.log('PAGE_ERROR:', err.message));
