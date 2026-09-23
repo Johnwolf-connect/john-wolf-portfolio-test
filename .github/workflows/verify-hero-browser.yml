@@ -59,6 +59,53 @@ jobs:
 
             await page.waitForSelector('.hero-video', { timeout: 30000 });
 
+            await page.evaluate(() => {
+              window.__heroOriginal =
+                document.querySelector('.hero-video')
+
+              window.__heroOriginal.addEventListener(
+                'pause',
+                () => {
+                  console.error(
+                    'HERO_PAUSE_EVENT',
+                    JSON.stringify({
+                      t: window.__heroOriginal.currentTime,
+                      connected: window.__heroOriginal.isConnected,
+                      muted: window.__heroOriginal.muted,
+                      defaultMuted: window.__heroOriginal.defaultMuted,
+                      autoplay: window.__heroOriginal.autoplay,
+                      loop: window.__heroOriginal.loop,
+                      readyState: window.__heroOriginal.readyState,
+                      networkState: window.__heroOriginal.networkState,
+                      visibility: document.visibilityState,
+                    }),
+                  )
+                },
+              )
+
+              new MutationObserver(() => {
+                const current =
+                  document.querySelector('.hero-video')
+
+                if (current !== window.__heroOriginal) {
+                  console.error(
+                    'HERO_NODE_REPLACED',
+                    JSON.stringify({
+                      oldConnected:
+                        window.__heroOriginal.isConnected,
+                      currentExists: Boolean(current),
+                    }),
+                  )
+                }
+              }).observe(
+                document.documentElement,
+                {
+                  childList: true,
+                  subtree: true,
+                },
+              )
+            })
+
             const initial = await page.$eval('.hero-video', v => ({
               duration: v.duration,
               currentTime: v.currentTime,
@@ -83,6 +130,15 @@ jobs:
                 ended: v.ended,
                 readyState: v.readyState,
                 networkState: v.networkState,
+                muted: v.muted,
+                defaultMuted: v.defaultMuted,
+                autoplay: v.autoplay,
+                loop: v.loop,
+                connected: v.isConnected,
+                sameNode:
+                  v === window.__heroOriginal,
+                visibility:
+                  document.visibilityState,
               }));
 
               console.log('SAMPLE', i, JSON.stringify(s));
