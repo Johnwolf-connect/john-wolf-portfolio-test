@@ -1,0 +1,58 @@
+name: Replace portfolio video assets
+
+on:
+  push:
+    paths:
+      - '.github/workflows/replace-portfolio-videos.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  replace:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download exact replacement videos
+        run: |
+          set -euo pipefail
+
+          curl -L --fail --retry 3 -o /tmp/websites.mp4 "https://at.adobe.com/UYWemZoxJLpSYDNN"
+          curl -L --fail --retry 3 -o /tmp/logos.mp4 "https://at.adobe.com/h6cVX1tnRwf3oLyk"
+          curl -L --fail --retry 3 -o /tmp/hero-neon.mp4 "https://at.adobe.com/AB5rB7cLJ1hgzUBE"
+          curl -L --fail --retry 3 -o /tmp/brand-guidelines-background.mp4 "https://at.adobe.com/4En3srCguf6Ie8iS"
+          curl -L --fail --retry 3 -o /tmp/contact.mp4 "https://at.adobe.com/1Wr8FjgfCa7ab7SH"
+          curl -L --fail --retry 3 -o /tmp/environment.mp4 "https://at.adobe.com/phZeIR1pdgNH91zd"
+
+          test -s /tmp/websites.mp4
+          test -s /tmp/logos.mp4
+          test -s /tmp/hero-neon.mp4
+          test -s /tmp/brand-guidelines-background.mp4
+          test -s /tmp/contact.mp4
+          test -s /tmp/environment.mp4
+
+      - name: Replace binaries in place
+        run: |
+          cp /tmp/websites.mp4 public/assets/carousel/websites.mp4
+
+          # The active Logos card currently points at packaging.mp4.
+          # Keep the site structure untouched and replace that binary in place.
+          cp /tmp/logos.mp4 public/assets/carousel/packaging.mp4
+
+          # Keep the unused historical logos.mp4 synchronized too.
+          cp /tmp/logos.mp4 public/assets/carousel/logos.mp4
+
+          cp /tmp/hero-neon.mp4 public/assets/hero-neon.mp4
+          cp /tmp/brand-guidelines-background.mp4 public/assets/brand-guidelines/brand-guidelines-background.mp4
+          cp /tmp/contact.mp4 public/assets/carousel/contact.mp4
+          cp /tmp/environment.mp4 public/assets/start-project/environment.mp4
+
+      - name: Commit replacements
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add             public/assets/carousel/websites.mp4             public/assets/carousel/packaging.mp4             public/assets/carousel/logos.mp4             public/assets/hero-neon.mp4             public/assets/brand-guidelines/brand-guidelines-background.mp4             public/assets/carousel/contact.mp4             public/assets/start-project/environment.mp4
+          git diff --cached --quiet && exit 0
+          git commit -m 'Replace damaged portfolio video binaries in place'
+          git push
