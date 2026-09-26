@@ -1,0 +1,52 @@
+name: Remove About service card
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/remove-about-service-card.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Remove only the About card from Services
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('src/App.jsx')
+          text = path.read_text()
+          block = """  {\n    title: 'About',\n    eyebrow: 'The designer',\n    description: 'The thinking, standards, and experience behind the work.',\n    video: '/assets/carousel/about.mp4',\n    poster: '/assets/carousel/about.jpg',\n  },\n"""
+          if block not in text:
+              raise SystemExit('Expected About carousel card block not found; refusing to change anything.')
+          updated = text.replace(block, '', 1)
+          if updated.count("title: 'About'") != text.count("title: 'About'") - 1:
+              raise SystemExit('Safety check failed; refusing to write.')
+          path.write_text(updated)
+          PY
+
+      - name: Verify production build
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+          pnpm build
+
+      - name: Commit exact change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/App.jsx
+          git diff --cached --check
+          git commit -m "Remove About card from Services carousel"
+          git push origin main
