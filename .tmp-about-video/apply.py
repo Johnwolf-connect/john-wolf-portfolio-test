@@ -1,0 +1,378 @@
+from pathlib import Path
+import base64
+import hashlib
+
+# Rebuild the exact uploaded clip after the portrait source was rotated
+# clockwise into a horizontal 16:9 background and optimized for the web.
+parts = sorted(Path('.tmp-about-video').glob('part*.b64'))
+if len(parts) != 7:
+    raise SystemExit(f'Expected 7 video parts, found {len(parts)}')
+
+encoded = ''.join(part.read_text().strip() for part in parts)
+payload = base64.b64decode(encoded, validate=True)
+expected_size = 33952
+expected_sha = '57187cd4b1d0dc4db024ccda60651f0f4773dabc3db67956b065db92f387584a'
+actual_sha = hashlib.sha256(payload).hexdigest()
+if len(payload) != expected_size:
+    raise SystemExit(f'Video size mismatch: {len(payload)} != {expected_size}')
+if actual_sha != expected_sha:
+    raise SystemExit(f'Video SHA mismatch: {actual_sha}')
+
+target = Path('public/assets/about/specialties-background.mp4')
+target.parent.mkdir(parents=True, exist_ok=True)
+target.write_bytes(payload)
+
+app_path = Path('src/App.jsx')
+app = app_path.read_text()
+old = '''      <section className="chapter-page full-page-section" id="about">
+        <div className="chapter-page-copy">
+          <p>About</p>
+          <h2>About John Wolf.</h2>
+          <span>The designer, process, and point of view behind the work.</span>
+        </div>
+      </section>'''
+new = '''      <section
+        className="chapter-page specialties-page full-page-section"
+        id="about"
+      >
+        <video
+          className="specialties-background-video"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          aria-hidden="true"
+        >
+          <source
+            src="/assets/about/specialties-background.mp4"
+            type="video/mp4"
+          />
+        </video>
+
+        <div
+          className="specialties-background-shade"
+          aria-hidden="true"
+        />
+
+        <div className="specialties-interface">
+          <header className="specialties-heading">
+            <p>SPECIALTIES</p>
+            <h2>BEYOND DESIGN</h2>
+            <span>
+              20+ years of visual problem-solving across design,
+              branding, illustration, web, and AI-assisted creative work.
+            </span>
+          </header>
+
+          <div
+            className="specialties-marquees"
+            aria-label="Creative specialties and tools"
+          >
+            {[
+              {
+                direction: 'left',
+                items: [
+                  'Logo Design',
+                  'Branding',
+                  'Brand Guidelines',
+                  'Graphic Design',
+                  'Illustration',
+                  'Creative Direction',
+                  'Cover Art',
+                  'Visual Identity',
+                ],
+              },
+              {
+                direction: 'right',
+                items: [
+                  'Photoshop',
+                  'Illustrator',
+                  'Adobe Firefly',
+                  'Procreate',
+                  'Canva',
+                  'Figma',
+                  'Vercel',
+                  'GitHub',
+                ],
+              },
+              {
+                direction: 'left',
+                items: [
+                  'Web Design',
+                  'Web Development',
+                  'GSAP',
+                  'Motion Design',
+                  'ChatGPT',
+                  'Lovable.AI',
+                  'AI Imaging',
+                  'AI Video',
+                  'Concept Development',
+                ],
+              },
+            ].map((row, rowIndex) => (
+              <div
+                className={`specialties-row specialties-row--${row.direction}`}
+                key={`${row.direction}-${rowIndex}`}
+              >
+                <div className="specialties-track">
+                  <div className="specialties-group">
+                    {row.items.map((item) => (
+                      <span
+                        className="specialty-pill"
+                        key={`${rowIndex}-${item}`}
+                      >
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                  <div
+                    className="specialties-group"
+                    aria-hidden="true"
+                  >
+                    {row.items.map((item) => (
+                      <span
+                        className="specialty-pill"
+                        key={`${rowIndex}-${item}-duplicate`}
+                      >
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>'''
+if old not in app:
+    raise SystemExit('Expected About section was not found; refusing to patch.')
+app_path.write_text(app.replace(old, new, 1))
+
+css_path = Path('src/styles.css')
+css = css_path.read_text()
+marker = '/* ===== ABOUT / SPECIALTIES: START ===== */'
+if marker in css:
+    raise SystemExit('Specialties styles already exist; refusing duplicate insertion.')
+
+css += r'''
+
+/* ===== ABOUT / SPECIALTIES: START ===== */
+.specialties-page {
+  position: relative;
+  display: block;
+  min-height: 100svh;
+  padding: 0;
+  overflow: hidden;
+  isolation: isolate;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  background: #030305;
+}
+
+.specialties-background-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+  filter: saturate(1.12) contrast(1.08) brightness(0.62);
+  transform: scale(1.025);
+}
+
+.specialties-background-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(2, 2, 5, 0.74) 0%, rgba(2, 2, 5, 0.28) 27%, rgba(2, 2, 5, 0.2) 68%, rgba(2, 2, 5, 0.7) 100%),
+    linear-gradient(90deg, rgba(2, 2, 5, 0.5) 0%, rgba(2, 2, 5, 0.08) 45%, rgba(2, 2, 5, 0.22) 100%);
+}
+
+.specialties-interface {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100svh;
+  padding: clamp(7.1rem, 13vh, 9rem) 0 clamp(2.4rem, 6vh, 4.5rem);
+}
+
+.specialties-heading {
+  width: min(66rem, 100%);
+  padding: 0 var(--page-gutter);
+}
+
+.specialties-heading p {
+  margin: 0 0 0.85rem;
+  color: var(--pink);
+  font-size: 0.7rem;
+  font-weight: 760;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.specialties-heading h2 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(3.5rem, 7.2vw, 7.7rem);
+  font-weight: 780;
+  line-height: 0.87;
+  letter-spacing: -0.075em;
+}
+
+.specialties-heading span {
+  display: block;
+  max-width: 48rem;
+  margin-top: 1.25rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: clamp(0.9rem, 1.25vw, 1.08rem);
+  line-height: 1.62;
+}
+
+.specialties-marquees {
+  display: grid;
+  gap: clamp(0.9rem, 1.8vh, 1.35rem);
+  width: 100%;
+  margin-top: clamp(2.6rem, 6vh, 5rem);
+}
+
+.specialties-row {
+  width: 100%;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%);
+}
+
+.specialties-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+
+.specialties-group {
+  display: flex;
+  flex: none;
+  gap: clamp(0.9rem, 1.6vw, 1.35rem);
+  padding-right: clamp(0.9rem, 1.6vw, 1.35rem);
+}
+
+.specialties-row--left .specialties-track {
+  animation: specialties-scroll-left 54s linear infinite;
+}
+
+.specialties-row--right .specialties-track {
+  animation: specialties-scroll-right 60s linear infinite;
+}
+
+.specialties-row:nth-child(3) .specialties-track {
+  animation-duration: 57s;
+}
+
+.specialty-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  min-height: 3.15rem;
+  padding: 0.72rem 1.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.94);
+  background: rgba(5, 5, 10, 0.32);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 8px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-size: clamp(0.8rem, 1.05vw, 0.96rem);
+  font-weight: 520;
+  line-height: 1;
+  white-space: nowrap;
+  transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
+}
+
+.specialty-pill:hover {
+  z-index: 2;
+  transform: translateY(-2px) scale(1.035);
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 28px rgba(212, 96, 197, 0.16), 0 12px 34px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes specialties-scroll-left {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+
+@keyframes specialties-scroll-right {
+  from { transform: translate3d(-50%, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+
+@media (max-width: 820px) {
+  .specialties-page {
+    min-height: 100svh;
+    padding: 0;
+  }
+
+  .specialties-interface {
+    min-height: 100svh;
+    padding: 6.7rem 0 2.2rem;
+  }
+
+  .specialties-heading {
+    padding: 0 1rem;
+  }
+
+  .specialties-heading p {
+    margin-bottom: 0.65rem;
+    font-size: 0.6rem;
+  }
+
+  .specialties-heading h2 {
+    font-size: clamp(3rem, 15vw, 5.2rem);
+    line-height: 0.9;
+  }
+
+  .specialties-heading span {
+    max-width: 30rem;
+    margin-top: 0.95rem;
+    font-size: 0.84rem;
+    line-height: 1.55;
+  }
+
+  .specialties-marquees {
+    gap: 0.82rem;
+    margin-top: 2.2rem;
+  }
+
+  .specialties-row {
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 2%, #000 98%, transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0%, #000 2%, #000 98%, transparent 100%);
+  }
+
+  .specialties-group {
+    gap: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .specialty-pill {
+    min-height: 2.65rem;
+    padding: 0.62rem 1.05rem;
+    font-size: 0.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .specialties-track {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+/* ===== ABOUT / SPECIALTIES: END ===== */
+'''
+css_path.write_text(css)
+print('About Specialties source patch complete.')
