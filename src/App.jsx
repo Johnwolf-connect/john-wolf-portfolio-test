@@ -854,10 +854,14 @@ useEffect(() => {
     }
 
     triggerLocked = true
-    contactReturnY.current = window.scrollY
-    contactReturnNavigation.current = 'About'
     setActiveNavigation('Contact')
-    setContactOpen(true)
+
+    const startProject =
+      window.__johnWolfStartProjectTransition
+
+    if (startProject?.open) {
+      startProject.open()
+    }
 
     window.setTimeout(() => {
       triggerLocked = false
