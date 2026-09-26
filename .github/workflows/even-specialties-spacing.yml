@@ -1,0 +1,87 @@
+name: Even specialties spacing
+
+on:
+  push:
+    paths:
+      - '.github/workflows/even-specialties-spacing.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Evenly distribute specialty pills
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/styles.css')
+          css = path.read_text()
+
+          old = """.specialties-group {
+            display: flex;
+            flex: none;
+            gap: clamp(0.9rem, 1.6vw, 1.35rem);
+            padding-right: clamp(0.9rem, 1.6vw, 1.35rem);
+          }
+          """
+
+          new = """.specialties-group {
+            display: flex;
+            flex: none;
+            align-items: center;
+            justify-content: space-evenly;
+            min-width: 100vw;
+            gap: clamp(0.72rem, 1.1vw, 1rem);
+            padding: 0 clamp(0.72rem, 1.15vw, 1.05rem);
+          }
+          """
+
+          if old not in css:
+              raise SystemExit('desktop specialties-group block not found')
+          css = css.replace(old, new, 1)
+
+          old_mobile = """  .specialties-group {
+            gap: 0.75rem;
+            padding-right: 0.75rem;
+          }
+          """
+
+          new_mobile = """  .specialties-group {
+            gap: 0.65rem;
+            padding: 0 0.75rem;
+          }
+          """
+
+          if old_mobile not in css:
+              raise SystemExit('mobile specialties-group block not found')
+          css = css.replace(old_mobile, new_mobile, 1)
+
+          path.write_text(css)
+
+          assert 'justify-content: space-evenly;' in css
+          assert 'min-width: 100vw;' in css
+          print('Specialty rows evenly distributed')
+          PY
+
+      - name: Verify production build
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+
+      - name: Publish and clean updater
+        run: |
+          git config user.name 'John Wolf'
+          git config user.email '136143744+Johnwolf-connect@users.noreply.github.com'
+          git add src/styles.css
+          git commit -m 'Evenly space specialty pills across each row'
+          git rm -f .github/workflows/even-specialties-spacing.yml
+          git commit -m 'Clean specialties spacing updater'
+          git push origin main
