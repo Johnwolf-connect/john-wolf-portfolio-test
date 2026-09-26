@@ -24,7 +24,6 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-
           path = Path('src/styles.css')
           css = path.read_text()
           marker = '/* ===== HOME / SERVICES SECTION BOUNDARY FIX ===== */'
@@ -32,17 +31,7 @@ jobs:
               anchor = ".experience-sticky {\n  top: auto;\n}\n"
               if anchor not in css:
                   raise SystemExit('experience-sticky anchor not found')
-              fix = """
-
-/* ===== HOME / SERVICES SECTION BOUNDARY FIX ===== */
-@media (min-width: 901px) {
-  .experience-sticky {
-    height: max(100svh, 54rem);
-    min-height: 54rem;
-  }
-}
-/* ===== HOME / SERVICES SECTION BOUNDARY FIX: END ===== */
-"""
+              fix = "\n\n/* ===== HOME / SERVICES SECTION BOUNDARY FIX ===== */\n@media (min-width: 901px) {\n  .experience-sticky {\n    height: max(100svh, 54rem);\n    min-height: 54rem;\n  }\n}\n/* ===== HOME / SERVICES SECTION BOUNDARY FIX: END ===== */\n"
               css = css.replace(anchor, anchor + fix, 1)
               path.write_text(css)
           PY
