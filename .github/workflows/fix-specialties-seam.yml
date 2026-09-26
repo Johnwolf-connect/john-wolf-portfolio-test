@@ -25,32 +25,14 @@ jobs:
           app_path = Path('src/App.jsx')
           app = app_path.read_text()
 
-          old_first = """{row.items.map((item) => (
-                      <span
-                        className=\"specialty-pill\"
-                        key={`${rowIndex}-${item}`}
-                      >"""
-          new_first = """{[...row.items, ...row.items].map((item, itemIndex) => (
-                      <span
-                        className=\"specialty-pill\"
-                        key={`${rowIndex}-${item}-${itemIndex}`}
-                      >"""
-
+          old_first = "{row.items.map((item) => (\n                      <span\n                        className=\"specialty-pill\"\n                        key={`${rowIndex}-${item}`}\n                      >"
+          new_first = "{[...row.items, ...row.items].map((item, itemIndex) => (\n                      <span\n                        className=\"specialty-pill\"\n                        key={`${rowIndex}-${item}-${itemIndex}`}\n                      >"
           if old_first not in app:
               raise SystemExit('first specialties group renderer not found')
           app = app.replace(old_first, new_first, 1)
 
-          old_second = """{row.items.map((item) => (
-                      <span
-                        className=\"specialty-pill\"
-                        key={`${rowIndex}-${item}-duplicate`}
-                      >"""
-          new_second = """{[...row.items, ...row.items].map((item, itemIndex) => (
-                      <span
-                        className=\"specialty-pill\"
-                        key={`${rowIndex}-${item}-${itemIndex}-duplicate`}
-                      >"""
-
+          old_second = "{row.items.map((item) => (\n                      <span\n                        className=\"specialty-pill\"\n                        key={`${rowIndex}-${item}-duplicate`}\n                      >"
+          new_second = "{[...row.items, ...row.items].map((item, itemIndex) => (\n                      <span\n                        className=\"specialty-pill\"\n                        key={`${rowIndex}-${item}-${itemIndex}-duplicate`}\n                      >"
           if old_second not in app:
               raise SystemExit('second specialties group renderer not found')
           app = app.replace(old_second, new_second, 1)
@@ -59,53 +41,32 @@ jobs:
           css_path = Path('src/styles.css')
           css = css_path.read_text()
 
-          old_group = """.specialties-group {
-  display: flex;
-  flex: none;
-  align-items: center;
-  justify-content: space-evenly;
-  min-width: 100vw;
-  gap: clamp(0.72rem, 1.1vw, 1rem);
-  padding: 0 clamp(0.72rem, 1.15vw, 1.05rem);
-}
-"""
-          new_group = """.specialties-group {
-  --specialty-gap: clamp(0.85rem, 1.2vw, 1.15rem);
-  display: flex;
-  flex: none;
-  align-items: center;
-  width: max-content;
-  gap: var(--specialty-gap);
-  padding-right: var(--specialty-gap);
-}
-"""
-
+          old_group = ".specialties-group {\n  display: flex;\n  flex: none;\n  align-items: center;\n  justify-content: space-evenly;\n  min-width: 100vw;\n  gap: clamp(0.72rem, 1.1vw, 1rem);\n  padding: 0 clamp(0.72rem, 1.15vw, 1.05rem);\n}\n"
+          new_group = ".specialties-group {\n  --specialty-gap: clamp(0.85rem, 1.2vw, 1.15rem);\n  display: flex;\n  flex: none;\n  align-items: center;\n  width: max-content;\n  gap: var(--specialty-gap);\n  padding-right: var(--specialty-gap);\n}\n"
           if old_group not in css:
               raise SystemExit('current specialties group block not found')
           css = css.replace(old_group, new_group, 1)
 
-          css = css.replace(
-              "animation: specialties-scroll-left 54s linear infinite;",
-              "animation: specialties-scroll-left 108s linear infinite;",
-              1,
-          )
-          css = css.replace(
-              "animation: specialties-scroll-right 60s linear infinite;",
-              "animation: specialties-scroll-right 120s linear infinite;",
-              1,
-          )
-          css = css.replace(
-              "animation-duration: 57s;",
-              "animation-duration: 114s;",
-              1,
-          )
+          if 'animation: specialties-scroll-left 54s linear infinite;' not in css:
+              raise SystemExit('row 1 duration not found')
+          css = css.replace('animation: specialties-scroll-left 54s linear infinite;', 'animation: specialties-scroll-left 108s linear infinite;', 1)
+
+          if 'animation: specialties-scroll-right 60s linear infinite;' not in css:
+              raise SystemExit('row 2 duration not found')
+          css = css.replace('animation: specialties-scroll-right 60s linear infinite;', 'animation: specialties-scroll-right 120s linear infinite;', 1)
+
+          if 'animation-duration: 57s;' not in css:
+              raise SystemExit('row 3 duration not found')
+          css = css.replace('animation-duration: 57s;', 'animation-duration: 114s;', 1)
 
           css_path.write_text(css)
 
-          assert '[...row.items, ...row.items]' in app
+          assert app.count('[...row.items, ...row.items]') == 2
           assert 'padding-right: var(--specialty-gap);' in css
-          assert 'space-evenly' not in css[css.find('.specialties-group {'):css.find('.specialties-row--left')]
-          print('Rows 1, 2, and 3 now use equal fixed gaps with seamless duplicate sequences')
+          assert 'specialties-scroll-left 108s' in css
+          assert 'specialties-scroll-right 120s' in css
+          assert 'animation-duration: 114s;' in css
+          print('Rows 1, 2, and 3 now use equal seam-safe spacing')
           PY
 
       - name: Verify production build
