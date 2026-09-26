@@ -431,6 +431,10 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
   let modelLoadFailed = false
 
   let screenSurface = null
+  let screenLocalCorners = null
+  let lidPivot = null
+  let lidOpenProgress = 0
+  const CLOSED_LID_ANGLE = THREE.MathUtils.degToRad(110.05)
   const loader = new GLTFLoader()
 
   const modelReady = new Promise((resolve) => {
@@ -446,9 +450,13 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
             ? child.material
             : [child.material]
 
-          const isWallpaperSurface = materials.some(
-            (material) => material?.name === 'LCD',
-          )
+          const isWallpaperSurface =
+            child.name === 'SadnAkehSlxIwKv' ||
+            materials.some(
+              (material) =>
+                material?.name === 'LCD' ||
+                material?.name === 'VNZklasZKSWjWUk',
+            )
 
           if (isWallpaperSurface) {
             /*
@@ -466,12 +474,41 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
         })
 
         /*
-          The uploaded MacBook Ultra model is authored in meters.
-          Scale and offset it so its LCD occupies the same transition
-          screen footprint the effect was designed around.
+          MacBook Air 15 (Space Gray) 2023. The source model is authored
+          open. Re-parent the complete lid assembly to a hinge pivot so the
+          transition can begin physically closed and open during the turn.
         */
-        model.scale.setScalar(880)
-        model.position.set(0, -111, 110.5)
+        const lidAssembly = model.getObjectByName('GyAtsALzJhKEkPM')
+
+        if (lidAssembly?.parent) {
+          const lidParent = lidAssembly.parent
+          lidPivot = new THREE.Group()
+          lidPivot.name = 'JohnWolfMacBookLidPivot'
+          lidPivot.position.set(0, -0.25, -11.75)
+          lidParent.add(lidPivot)
+          lidParent.updateMatrixWorld(true)
+          lidPivot.updateMatrixWorld(true)
+          lidPivot.attach(lidAssembly)
+          lidPivot.rotation.x = CLOSED_LID_ANGLE
+          lidOpenProgress = 0
+        }
+
+        if (screenSurface) {
+          screenLocalCorners = [
+            new THREE.Vector3(-16.2, 20.15, -19.48),
+            new THREE.Vector3(16.2, 20.15, -19.48),
+            new THREE.Vector3(16.2, 1.3, -12.59),
+            new THREE.Vector3(-16.2, 1.3, -12.59),
+          ]
+        }
+
+        /*
+          Scale the 34 cm wide MacBook so its LCD is the same 310-unit
+          transition surface used by the existing camera choreography, then
+          center that LCD around the transition origin.
+        */
+        model.scale.setScalar(9.48)
+        model.position.set(0, -101.7, 152)
 
         laptopRoot.add(model)
         modelLoaded = true
@@ -508,6 +545,12 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
         new THREE.Vector3(-halfWidth, -halfHeight, 0),
       ].map((corner) =>
         laptopRoot.localToWorld(corner),
+      )
+    }
+
+    if (screenLocalCorners) {
+      return screenLocalCorners.map((corner) =>
+        screenSurface.localToWorld(corner.clone()),
       )
     }
 
@@ -558,7 +601,9 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
       projected,
     )
 
-    livePage.screen.style.opacity = area > 1 ? '1' : '0'
+    const screenReveal = clamp((lidOpenProgress - 0.12) / 0.24, 0, 1)
+    livePage.screen.style.opacity =
+      area > 1 ? String(screenReveal) : '0'
 
     if (transform) {
       livePage.screen.style.transform = transform
@@ -594,6 +639,17 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
       Math.sin(travelPhase * Math.PI * 2) * 0.055 +
       mix(0, -0.018, travelEase)
 
+    const lidPhase = clamp((progress - 0.08) / 0.64, 0, 1)
+    lidOpenProgress = easeInOutCubic(lidPhase)
+
+    if (lidPivot) {
+      lidPivot.rotation.x = mix(
+        CLOSED_LID_ANGLE,
+        0,
+        lidOpenProgress,
+      )
+    }
+
     if (progress > 0.08 && livePage) {
       livePage.screen.classList.add('is-framed')
     }
@@ -617,6 +673,9 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
       Math.PI * 2 - 0.2 + hover * 0.008,
       -0.018 + drift * 0.009,
     )
+
+    lidOpenProgress = 1
+    if (lidPivot) lidPivot.rotation.x = 0
   }
 
   function renderFrame(timestamp) {
@@ -694,6 +753,8 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
     laptopRoot.position.set(0, 0, 0)
     laptopRoot.rotation.set(0, 0, 0)
     laptopRoot.scale.setScalar(layout.initialScale)
+    lidOpenProgress = 0
+    if (lidPivot) lidPivot.rotation.x = CLOSED_LID_ANGLE
 
     cancelAnimationFrame(animationFrame)
     animationFrame = requestAnimationFrame(renderFrame)
@@ -719,6 +780,7 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
     const startScale = laptopRoot.scale.x
     const startPosition = laptopRoot.position.clone()
     const startRotation = laptopRoot.rotation.clone()
+    const startLidRotation = lidPivot?.rotation.x ?? 0
 
     await animate(1680, (progress) => {
       const eased = easeInOutCubic(progress)
@@ -736,6 +798,15 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
         mix(startRotation.z, 0, eased),
       )
 
+      lidOpenProgress = 1 - eased
+      if (lidPivot) {
+        lidPivot.rotation.x = mix(
+          startLidRotation,
+          CLOSED_LID_ANGLE,
+          eased,
+        )
+      }
+
       if (progress > 0.38) stage.classList.remove('is-rock-visible')
       if (progress > 0.88 && livePage) {
         livePage.screen.classList.remove('is-framed')
@@ -745,6 +816,8 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
     laptopRoot.rotation.set(0, 0, 0)
     laptopRoot.position.set(0, 0, 0)
     laptopRoot.scale.setScalar(layout.initialScale)
+    lidOpenProgress = 0
+    if (lidPivot) lidPivot.rotation.x = CLOSED_LID_ANGLE
     projectLivePage()
 
     livePage?.restore()
