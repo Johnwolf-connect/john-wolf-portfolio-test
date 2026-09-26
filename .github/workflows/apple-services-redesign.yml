@@ -1,0 +1,691 @@
+name: Apply Apple-style Services redesign
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apple-services-redesign.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  redesign:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply Services interaction redesign
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          app_path = Path('src/App.jsx')
+          css_path = Path('src/styles.css')
+          app = app_path.read_text()
+          css = css_path.read_text()
+
+          start_marker = "  useLayoutEffect(() => {\n    const stage = portfolioStage.current\n\n    if (!stage) return undefined\n"
+          end_marker = "\n  useLayoutEffect(() => {\n    const context = gsap.context(() => {"
+
+          start = app.find(start_marker)
+          if start == -1:
+              raise SystemExit('Services carousel effect start marker not found')
+
+          end = app.find(end_marker, start)
+          if end == -1:
+              raise SystemExit('Services carousel effect end marker not found')
+
+          new_effect = r'''  useLayoutEffect(() => {
+    const stage = portfolioStage.current
+    const section = stage?.closest('.portfolio-page')
+
+    if (!stage || !section) return undefined
+
+    const cards = gsap.utils.toArray(
+      '.archive-seamless-card',
+      stage,
+    )
+
+    const proxy = stage.querySelector(
+      '.archive-drag-proxy',
+    )
+
+    if (!cards.length || !proxy) {
+      return undefined
+    }
+
+    const reduceMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches
+
+    const desktop = window.matchMedia(
+      '(min-width: 821px)',
+    ).matches
+
+    let currentIndex = 0
+    let scrollTrigger = null
+    let dragStartX = 0
+
+    const setCardState = (
+      position,
+      immediate = false,
+    ) => {
+      const boundedPosition = clamp(
+        position,
+        0,
+        cards.length - 1,
+      )
+
+      const nextIndex = clamp(
+        Math.round(boundedPosition),
+        0,
+        cards.length - 1,
+      )
+
+      if (nextIndex !== currentIndex) {
+        currentIndex = nextIndex
+        setActiveCard(nextIndex)
+      }
+
+      section.style.setProperty(
+        '--services-progress',
+        String(
+          boundedPosition /
+            Math.max(cards.length - 1, 1),
+        ),
+      )
+
+      cards.forEach((card, index) => {
+        const offset = index - boundedPosition
+        const distance = Math.abs(offset)
+        const visible = distance < 2.15
+        const scale = Math.max(
+          0.68,
+          1 - distance * 0.17,
+        )
+        const opacity = visible
+          ? Math.max(
+              0.08,
+              1 - distance * 0.56,
+            )
+          : 0
+
+        const vars = {
+          xPercent:
+            -50 + offset * 118,
+          yPercent:
+            -50 + Math.min(distance, 2) * 2.4,
+          scale,
+          rotateY: clamp(
+            offset * -4.5,
+            -9,
+            9,
+          ),
+          opacity,
+          zIndex:
+            100 - Math.round(distance * 12),
+          filter: `brightness(${Math.max(
+            0.58,
+            1 - distance * 0.2,
+          )}) saturate(${Math.max(
+            0.72,
+            1 - distance * 0.12,
+          )})`,
+          transformOrigin: '50% 50%',
+          overwrite: true,
+        }
+
+        if (immediate || reduceMotion) {
+          gsap.set(card, vars)
+        } else {
+          gsap.to(card, {
+            ...vars,
+            duration: 0.72,
+            ease: 'power3.out',
+          })
+        }
+
+        card.style.pointerEvents =
+          distance < 0.48 ? 'auto' : 'none'
+
+        card.setAttribute(
+          'aria-hidden',
+          distance > 1.55 ? 'true' : 'false',
+        )
+      })
+    }
+
+    const positionForIndex = (index) =>
+      clamp(index, 0, cards.length - 1)
+
+    const goToIndex = (targetIndex) => {
+      const nextIndex = positionForIndex(
+        targetIndex,
+      )
+
+      if (
+        scrollTrigger &&
+        desktop &&
+        !reduceMotion
+      ) {
+        const progress =
+          nextIndex /
+          Math.max(cards.length - 1, 1)
+
+        const targetScroll =
+          scrollTrigger.start +
+          (scrollTrigger.end -
+            scrollTrigger.start) *
+            progress
+
+        window.scrollTo({
+          top: targetScroll,
+          behavior: 'smooth',
+        })
+
+        return
+      }
+
+      setCardState(nextIndex)
+    }
+
+    const moveBy = (amount) => {
+      goToIndex(currentIndex + amount)
+    }
+
+    if (!reduceMotion && desktop) {
+      scrollTrigger = ScrollTrigger.create({
+        trigger: section,
+        start: 'top top',
+        end: () =>
+          `+=${Math.max(
+            window.innerHeight *
+              0.82 *
+              (cards.length - 1),
+            3000,
+          )}`,
+        pin: true,
+        pinSpacing: true,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+        onUpdate(self) {
+          const position =
+            self.progress *
+            (cards.length - 1)
+
+          setCardState(position, true)
+        },
+      })
+    }
+
+    const draggable = Draggable.create(proxy, {
+      type: 'x',
+      trigger: stage,
+      allowEventDefault: true,
+      onPress() {
+        dragStartX = this.x
+        stage.classList.add('is-dragging')
+      },
+      onRelease() {
+        const delta = this.x - dragStartX
+
+        stage.classList.remove('is-dragging')
+        gsap.set(proxy, { x: 0 })
+
+        if (Math.abs(delta) < 34) return
+
+        moveBy(delta < 0 ? 1 : -1)
+      },
+    })[0]
+
+    const handleHorizontalWheel = (event) => {
+      const horizontalIntent =
+        Math.abs(event.deltaX) >
+        Math.abs(event.deltaY) * 0.8
+
+      if (
+        !horizontalIntent ||
+        Math.abs(event.deltaX) < 22 ||
+        archiveWheelLocked.current
+      ) {
+        return
+      }
+
+      event.preventDefault()
+      archiveWheelLocked.current = true
+      moveBy(event.deltaX > 0 ? 1 : -1)
+
+      window.setTimeout(() => {
+        archiveWheelLocked.current = false
+      }, 520)
+    }
+
+    const handleKeys = (event) => {
+      if (
+        document.activeElement &&
+        !stage.contains(document.activeElement) &&
+        document.activeElement !== document.body
+      ) {
+        return
+      }
+
+      if (
+        event.key === 'ArrowRight' ||
+        event.key === 'PageDown'
+      ) {
+        event.preventDefault()
+        moveBy(1)
+      }
+
+      if (
+        event.key === 'ArrowLeft' ||
+        event.key === 'PageUp'
+      ) {
+        event.preventDefault()
+        moveBy(-1)
+      }
+    }
+
+    stage.addEventListener(
+      'wheel',
+      handleHorizontalWheel,
+      { passive: false },
+    )
+
+    window.addEventListener(
+      'keydown',
+      handleKeys,
+    )
+
+    archiveLoopApi.current = {
+      goToIndex,
+      moveBy,
+      getIndex: () => currentIndex,
+    }
+
+    setCardState(0, true)
+
+    return () => {
+      stage.removeEventListener(
+        'wheel',
+        handleHorizontalWheel,
+      )
+
+      window.removeEventListener(
+        'keydown',
+        handleKeys,
+      )
+
+      draggable?.kill()
+      scrollTrigger?.kill()
+      gsap.killTweensOf(cards)
+      archiveLoopApi.current = null
+    }
+  }, [])'''
+
+          app = app[:start] + new_effect + app[end:]
+          app = app.replace(
+              '<span>Drag / swipe · smooth snap</span>',
+              '<span>Scroll / drag · snap to explore</span>',
+          )
+
+          app_path.write_text(app)
+
+          marker = '/* ===== APPLE SERVICES REDESIGN: START ===== */'
+          if marker in css:
+              css = css.split(marker)[0].rstrip() + '\n'
+
+          css += r'''
+
+/* ===== APPLE SERVICES REDESIGN: START ===== */
+
+.portfolio-page {
+  --services-progress: 0;
+}
+
+.carousel-interface {
+  pointer-events: none;
+  background:
+    radial-gradient(
+      circle at 63% 46%,
+      rgba(129, 88, 255, 0.105),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 72% 60%,
+      rgba(239, 119, 187, 0.055),
+      transparent 34%
+    ),
+    #050505;
+}
+
+.carousel-interface::before {
+  opacity: 0;
+}
+
+.carousel-interface::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(5, 5, 5, 0.96) 0%,
+      rgba(5, 5, 5, 0.72) 24%,
+      rgba(5, 5, 5, 0.08) 51%,
+      rgba(5, 5, 5, 0.2) 100%
+    );
+}
+
+.carousel-heading {
+  top: clamp(7.5rem, 17vh, 10.5rem);
+  z-index: 12;
+  width: min(26rem, 31vw);
+}
+
+.carousel-heading p {
+  color: rgba(239, 119, 187, 0.92);
+}
+
+.carousel-heading h2 {
+  max-width: 21rem;
+  margin-top: 0.8rem;
+  font-size: clamp(2.6rem, 4.7vw, 5.35rem);
+  line-height: 0.91;
+  letter-spacing: -0.075em;
+}
+
+.carousel-viewport {
+  inset: 0 0 0 27%;
+  z-index: 5;
+  display: block;
+  pointer-events: auto;
+  perspective: 1800px;
+  perspective-origin: 55% 50%;
+  touch-action: pan-y;
+}
+
+.archive-seamless-track {
+  position: absolute;
+  inset: 0;
+}
+
+.archive-drag-proxy {
+  position: absolute;
+  inset: 0;
+  z-index: 300;
+  cursor: grab;
+  touch-action: pan-y;
+}
+
+.archive-seamless-stage.is-dragging .archive-drag-proxy {
+  cursor: grabbing;
+}
+
+.carousel-card {
+  inset: auto;
+  top: 50%;
+  left: 50%;
+  width: clamp(21rem, 31vw, 31rem);
+  height: clamp(27rem, 70svh, 41rem);
+  border-color: rgba(255, 255, 255, 0.14);
+  border-radius: 1.65rem;
+  background: #09090b;
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.56),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transform: translate(-50%, -50%);
+  transition:
+    border-color 360ms ease,
+    box-shadow 360ms ease;
+  will-change: transform, opacity, filter;
+}
+
+.carousel-card.is-active {
+  border-color: rgba(255, 255, 255, 0.48);
+  box-shadow:
+    0 42px 120px rgba(0, 0, 0, 0.68),
+    0 0 70px rgba(118, 82, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.carousel-card::after {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.025),
+      transparent 28%
+    ),
+    linear-gradient(
+      180deg,
+      transparent 52%,
+      rgba(0, 0, 0, 0.84) 100%
+    );
+}
+
+.carousel-card-video video {
+  object-fit: cover;
+  filter:
+    saturate(1.02)
+    contrast(1.03)
+    brightness(0.88);
+  transform: scale(1.005);
+}
+
+.carousel-card-shade {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.02),
+      rgba(0, 0, 0, 0.04) 52%,
+      rgba(0, 0, 0, 0.76)
+    );
+}
+
+.carousel-card-content {
+  right: 1.55rem;
+  bottom: 1.6rem;
+  left: 1.55rem;
+  transition:
+    opacity 360ms ease,
+    transform 360ms ease;
+}
+
+.carousel-card:not(.is-active) .carousel-card-content {
+  opacity: 0.22;
+  transform: translateY(0.4rem);
+}
+
+.carousel-card-content p {
+  margin-bottom: 0.55rem;
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.carousel-card-content h3 {
+  font-size: clamp(1.85rem, 2.6vw, 2.8rem);
+}
+
+.carousel-card-content span {
+  margin-top: 0.9rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.carousel-active-copy {
+  right: var(--page-gutter);
+  bottom: clamp(2.5rem, 6vh, 4.8rem);
+  z-index: 12;
+  width: min(22rem, 25vw);
+  text-align: left;
+}
+
+.carousel-active-copy > span {
+  margin-bottom: 1rem;
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.carousel-active-copy h3 {
+  margin-top: 0.45rem;
+  font-size: clamp(2.2rem, 3.4vw, 3.9rem);
+  line-height: 0.9;
+}
+
+.carousel-active-copy .active-rule {
+  display: none;
+}
+
+.carousel-active-copy small {
+  max-width: 20rem;
+  margin-top: 1rem;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+.carousel-scroll-note {
+  bottom: 2.4rem;
+  z-index: 12;
+}
+
+.carousel-scroll-note span {
+  color: rgba(255, 255, 255, 0.44);
+}
+
+@media (max-width: 1120px) {
+  .carousel-heading {
+    width: min(22rem, 29vw);
+  }
+
+  .carousel-viewport {
+    inset-left: 23%;
+  }
+
+  .carousel-active-copy {
+    width: 23vw;
+  }
+}
+
+@media (max-width: 820px) {
+  .portfolio-page {
+    min-height: 100svh;
+  }
+
+  .carousel-interface {
+    min-height: 100svh;
+  }
+
+  .carousel-heading {
+    top: 5.9rem;
+    left: 1rem;
+    width: calc(100% - 2rem);
+  }
+
+  .carousel-heading h2 {
+    max-width: 13rem;
+    font-size: clamp(2rem, 10vw, 3.2rem);
+  }
+
+  .carousel-viewport {
+    inset: 7.8rem 0 9.5rem;
+    perspective: 1200px;
+  }
+
+  .carousel-card {
+    width: min(78vw, 22rem);
+    height: min(57svh, 31rem);
+    border-radius: 1.35rem;
+  }
+
+  .carousel-active-copy {
+    right: 1rem;
+    bottom: 1.25rem;
+    left: 1rem;
+    width: auto;
+    text-align: left;
+  }
+
+  .carousel-active-copy > span,
+  .carousel-active-copy p {
+    display: inline-block;
+    margin-right: 0.75rem;
+  }
+
+  .carousel-active-copy h3 {
+    margin-top: 0.35rem;
+    font-size: 1.9rem;
+  }
+
+  .carousel-active-copy small {
+    display: block;
+    max-width: 28rem;
+    margin-top: 0.6rem;
+    font-size: 0.72rem;
+  }
+
+  .carousel-scroll-note {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .carousel-heading {
+    top: 5.35rem;
+  }
+
+  .carousel-viewport {
+    inset: 7.4rem 0 10.4rem;
+  }
+
+  .carousel-card {
+    width: min(80vw, 20rem);
+    height: min(54svh, 28rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carousel-viewport {
+    position: absolute;
+    inset: 7rem 0 8rem;
+    display: block;
+  }
+
+  .archive-seamless-track {
+    position: absolute;
+    inset: 0;
+  }
+
+  .carousel-card {
+    position: absolute;
+  }
+}
+
+/* ===== APPLE SERVICES REDESIGN: END ===== */
+'''
+
+          css_path.write_text(css)
+          PY
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build verification
+        run: npm run build
+
+      - name: Commit redesign
+        shell: bash
+        run: |
+          if git diff --quiet -- src/App.jsx src/styles.css; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git config user.name "John Wolf"
+          git config user.email "136143744+Johnwolf-connect@users.noreply.github.com"
+          git add src/App.jsx src/styles.css
+          git commit -m "Redesign Services as pinned Apple-style story"
+          git push origin HEAD:main
