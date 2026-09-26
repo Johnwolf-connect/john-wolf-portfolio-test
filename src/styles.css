@@ -2789,8 +2789,11 @@ body::-webkit-scrollbar,
 .specialties-group {
   display: flex;
   flex: none;
-  gap: clamp(0.9rem, 1.6vw, 1.35rem);
-  padding-right: clamp(0.9rem, 1.6vw, 1.35rem);
+  align-items: center;
+  justify-content: space-evenly;
+  min-width: 100vw;
+  gap: clamp(0.72rem, 1.1vw, 1rem);
+  padding: 0 clamp(0.72rem, 1.15vw, 1.05rem);
 }
 
 .specialties-row--left .specialties-track {
