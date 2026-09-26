@@ -10,7 +10,7 @@ import FroidPage from './components/FroidPage.jsx'
 
 gsap.registerPlugin(ScrollTrigger, Draggable)
 
-const navigation = ['Home', 'Services', 'About', 'Testimonials', 'Contact']
+const navigation = ['Home', 'Services', 'About', 'Contact']
 
 /* ===== ACTIVE NAVIGATION SYSTEM ===== */
 
@@ -18,7 +18,6 @@ const navigationTargets = {
   Home: '#home',
   Services: '#services',
   About: '#about',
-  Testimonials: '#testimonials',
   Contact: '#contact',
 }
 
@@ -633,7 +632,6 @@ export default function App() {
 
       const laterSections = [
         'Contact',
-        'Testimonials',
         'About',
       ]
 
@@ -1916,14 +1914,6 @@ export default function App() {
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      <section className="chapter-page full-page-section" id="testimonials">
-        <div className="chapter-page-copy">
-          <p>Testimonials</p>
-          <h2>What clients say.</h2>
-          <span>A dedicated full-screen stage for proof, outcomes, and client perspective.</span>
         </div>
       </section>
 
