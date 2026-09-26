@@ -1,0 +1,41 @@
+name: Fix Services card boundary
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-services-card-boundary.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Constrain Services cards to the right-side stage
+        run: |
+          if ! grep -q "SERVICES CARD TEXT BOUNDARY FIX" src/styles.css; then
+            printf '\n/* ===== SERVICES CARD TEXT BOUNDARY FIX ===== */\n@media (min-width: 821px) {\n  .portfolio-page .carousel-viewport.archive-seamless-stage {\n    top: 0;\n    right: 0;\n    bottom: 0;\n    left: calc(var(--page-gutter) + min(25rem, 29vw) + 1.5rem);\n    overflow: hidden;\n  }\n}\n/* ===== SERVICES CARD TEXT BOUNDARY FIX: END ===== */\n' >> src/styles.css
+          fi
+
+      - name: Verify production build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Publish and clean updater
+        run: |
+          rm -f .github/workflows/fix-services-card-boundary.yml
+          git config user.name 'John Wolf'
+          git config user.email '136143744+Johnwolf-connect@users.noreply.github.com'
+          git add src/styles.css .github/workflows/fix-services-card-boundary.yml
+          git commit -m 'Keep Services cards out of text column'
+          git push
