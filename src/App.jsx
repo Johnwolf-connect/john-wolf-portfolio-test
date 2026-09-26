@@ -1105,211 +1105,264 @@ export default function App() {
 
   useLayoutEffect(() => {
     const stage = portfolioStage.current
+    const section = stage?.closest('.portfolio-page')
 
-    if (!stage) return undefined
+    if (!stage || !section) return undefined
 
     const cards = gsap.utils.toArray(
       '.archive-seamless-card',
       stage,
     )
 
-    const proxy =
-      stage.querySelector(
-        '.archive-drag-proxy',
-      )
+    const proxy = stage.querySelector(
+      '.archive-drag-proxy',
+    )
 
     if (!cards.length || !proxy) {
       return undefined
     }
 
-    const spacing = 0.12
-    const snapTime = gsap.utils.snap(spacing)
+    const reduceMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches
 
-    gsap.set(cards, {
-      xPercent: 360,
-      opacity: 0,
-      scale: 0.18,
-      transformOrigin: '50% 50%',
-    })
-
-    const animateCard = (element) => {
-      const timeline = gsap.timeline()
-
-      timeline
-        .fromTo(
-          element,
-          {
-            scale: 0.18,
-            opacity: 0,
-          },
-          {
-            scale: 1,
-            opacity: 1,
-            zIndex: 100,
-            duration: 0.5,
-            yoyo: true,
-            repeat: 1,
-            ease: 'power1.in',
-            immediateRender: false,
-          },
-        )
-        .fromTo(
-          element,
-          {
-            xPercent: 360,
-          },
-          {
-            xPercent: -360,
-            duration: 1,
-            ease: 'none',
-            immediateRender: false,
-          },
-          0,
-        )
-
-      return timeline
-    }
-
-    const loop =
-      buildArchiveSeamlessLoop(
-        cards,
-        spacing,
-        animateCard,
-      )
-
-    const playhead = { offset: 0 }
-    const wrapTime = gsap.utils.wrap(
-      0,
-      loop.duration(),
-    )
+    const desktop = window.matchMedia(
+      '(min-width: 821px)',
+    ).matches
 
     let currentIndex = 0
-    let dragStartOffset = 0
+    let scrollTrigger = null
+    let dragStartX = 0
 
-    const syncActiveCard = () => {
-      const rawIndex = Math.round(
-        playhead.offset / spacing,
+    const setCardState = (
+      position,
+      immediate = false,
+    ) => {
+      const boundedPosition = clamp(
+        position,
+        0,
+        cards.length - 1,
       )
 
-      const nextIndex =
-        ((rawIndex % cards.length) +
-          cards.length) %
-        cards.length
+      const nextIndex = clamp(
+        Math.round(boundedPosition),
+        0,
+        cards.length - 1,
+      )
 
       if (nextIndex !== currentIndex) {
         currentIndex = nextIndex
         setActiveCard(nextIndex)
       }
+
+      section.style.setProperty(
+        '--services-progress',
+        String(
+          boundedPosition /
+            Math.max(cards.length - 1, 1),
+        ),
+      )
+
+      cards.forEach((card, index) => {
+        const offset = index - boundedPosition
+        const distance = Math.abs(offset)
+        const visible = distance < 2.15
+        const scale = Math.max(
+          0.68,
+          1 - distance * 0.17,
+        )
+        const opacity = visible
+          ? Math.max(
+              0.08,
+              1 - distance * 0.56,
+            )
+          : 0
+
+        const vars = {
+          xPercent:
+            -50 + offset * 118,
+          yPercent:
+            -50 + Math.min(distance, 2) * 2.4,
+          scale,
+          rotateY: clamp(
+            offset * -4.5,
+            -9,
+            9,
+          ),
+          opacity,
+          zIndex:
+            100 - Math.round(distance * 12),
+          filter: `brightness(${Math.max(
+            0.58,
+            1 - distance * 0.2,
+          )}) saturate(${Math.max(
+            0.72,
+            1 - distance * 0.12,
+          )})`,
+          transformOrigin: '50% 50%',
+          overwrite: true,
+        }
+
+        if (immediate || reduceMotion) {
+          gsap.set(card, vars)
+        } else {
+          gsap.to(card, {
+            ...vars,
+            duration: 0.72,
+            ease: 'power3.out',
+          })
+        }
+
+        card.style.pointerEvents =
+          distance < 0.48 ? 'auto' : 'none'
+
+        card.setAttribute(
+          'aria-hidden',
+          distance > 1.55 ? 'true' : 'false',
+        )
+      })
     }
 
-    const scrub = gsap.to(playhead, {
-      offset: 0,
-      duration: 0.62,
-      ease: 'power3',
-      paused: true,
-      onUpdate() {
-        loop.time(
-          wrapTime(playhead.offset),
-        )
-        syncActiveCard()
-      },
-    })
+    const positionForIndex = (index) =>
+      clamp(index, 0, cards.length - 1)
 
-    const smoothToOffset = (offset) => {
-      scrub.vars.offset = snapTime(offset)
-      scrub.invalidate().restart()
+    const goToIndex = (targetIndex) => {
+      const nextIndex = positionForIndex(
+        targetIndex,
+      )
+
+      if (
+        scrollTrigger &&
+        desktop &&
+        !reduceMotion
+      ) {
+        const progress =
+          nextIndex /
+          Math.max(cards.length - 1, 1)
+
+        const targetScroll =
+          scrollTrigger.start +
+          (scrollTrigger.end -
+            scrollTrigger.start) *
+            progress
+
+        window.scrollTo({
+          top: targetScroll,
+          behavior: 'smooth',
+        })
+
+        return
+      }
+
+      setCardState(nextIndex)
     }
 
     const moveBy = (amount) => {
-      smoothToOffset(
-        scrub.vars.offset +
-          spacing * amount,
-      )
+      goToIndex(currentIndex + amount)
     }
 
-    const goToIndex = (targetIndex) => {
-      const rawStep = Math.round(
-        scrub.vars.offset / spacing,
-      )
+    if (!reduceMotion && desktop) {
+      scrollTrigger = ScrollTrigger.create({
+        trigger: section,
+        start: 'top top',
+        end: () =>
+          `+=${Math.max(
+            window.innerHeight *
+              0.82 *
+              (cards.length - 1),
+            3000,
+          )}`,
+        pin: true,
+        pinSpacing: true,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+        onUpdate(self) {
+          const position =
+            self.progress *
+            (cards.length - 1)
 
-      const current =
-        ((rawStep % cards.length) +
-          cards.length) %
-        cards.length
-
-      let delta = targetIndex - current
-
-      if (delta > cards.length / 2) {
-        delta -= cards.length
-      }
-
-      if (delta < -cards.length / 2) {
-        delta += cards.length
-      }
-
-      smoothToOffset(
-        scrub.vars.offset +
-          delta * spacing,
-      )
+          setCardState(position, true)
+        },
+      })
     }
 
-    const draggable =
-      Draggable.create(proxy, {
-        type: 'x',
-        trigger: stage,
-        allowEventDefault: true,
-        onPress() {
-          dragStartOffset =
-            scrub.vars.offset
-          stage.classList.add(
-            'is-dragging',
-          )
-        },
-        onDrag() {
-          scrub.vars.offset =
-            dragStartOffset +
-            (this.startX - this.x) *
-              0.00135
+    const draggable = Draggable.create(proxy, {
+      type: 'x',
+      trigger: stage,
+      allowEventDefault: true,
+      onPress() {
+        dragStartX = this.x
+        stage.classList.add('is-dragging')
+      },
+      onRelease() {
+        const delta = this.x - dragStartX
 
-          scrub.invalidate().restart()
-        },
-        onDragEnd() {
-          stage.classList.remove(
-            'is-dragging',
-          )
-          smoothToOffset(
-            scrub.vars.offset,
-          )
-        },
-      })[0]
+        stage.classList.remove('is-dragging')
+        gsap.set(proxy, { x: 0 })
 
-    const handleWheel = (event) => {
+        if (Math.abs(delta) < 34) return
+
+        moveBy(delta < 0 ? 1 : -1)
+      },
+    })[0]
+
+    const handleHorizontalWheel = (event) => {
       const horizontalIntent =
         Math.abs(event.deltaX) >
-        Math.abs(event.deltaY) * 0.7
+        Math.abs(event.deltaY) * 0.8
 
       if (
         !horizontalIntent ||
-        Math.abs(event.deltaX) < 18 ||
+        Math.abs(event.deltaX) < 22 ||
         archiveWheelLocked.current
       ) {
         return
       }
 
       event.preventDefault()
-
       archiveWheelLocked.current = true
       moveBy(event.deltaX > 0 ? 1 : -1)
 
       window.setTimeout(() => {
         archiveWheelLocked.current = false
-      }, 360)
+      }, 520)
+    }
+
+    const handleKeys = (event) => {
+      if (
+        document.activeElement &&
+        !stage.contains(document.activeElement) &&
+        document.activeElement !== document.body
+      ) {
+        return
+      }
+
+      if (
+        event.key === 'ArrowRight' ||
+        event.key === 'PageDown'
+      ) {
+        event.preventDefault()
+        moveBy(1)
+      }
+
+      if (
+        event.key === 'ArrowLeft' ||
+        event.key === 'PageUp'
+      ) {
+        event.preventDefault()
+        moveBy(-1)
+      }
     }
 
     stage.addEventListener(
       'wheel',
-      handleWheel,
+      handleHorizontalWheel,
       { passive: false },
+    )
+
+    window.addEventListener(
+      'keydown',
+      handleKeys,
     )
 
     archiveLoopApi.current = {
@@ -1318,21 +1371,25 @@ export default function App() {
       getIndex: () => currentIndex,
     }
 
-    loop.time(0)
-    syncActiveCard()
+    setCardState(0, true)
 
     return () => {
       stage.removeEventListener(
         'wheel',
-        handleWheel,
+        handleHorizontalWheel,
       )
+
+      window.removeEventListener(
+        'keydown',
+        handleKeys,
+      )
+
       draggable?.kill()
-      scrub.kill()
-      loop.kill()
+      scrollTrigger?.kill()
+      gsap.killTweensOf(cards)
       archiveLoopApi.current = null
     }
   }, [])
-
   useLayoutEffect(() => {
     const context = gsap.context(() => {
       const reduceMotion = window.matchMedia(
@@ -1719,7 +1776,7 @@ export default function App() {
             </div>
 
             <div className="carousel-scroll-note">
-              <span>Drag / swipe · smooth snap</span>
+              <span>Scroll / drag · snap to explore</span>
               <i />
             </div>
           </div>
