@@ -1,0 +1,33 @@
+name: Inspect new MacBook source
+
+on:
+  push:
+    paths:
+      - '.github/workflows/inspect-new-macbook-source.yml'
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect public Sketchfab model payload
+        run: |
+          python - <<'PY'
+          import json, urllib.request
+          uid='e8d82e341c794141a2561c2c9d01d79e'
+          req=urllib.request.Request(f'https://sketchfab.com/i/models/{uid}', headers={'User-Agent':'Mozilla/5.0'})
+          try:
+              with urllib.request.urlopen(req, timeout=30) as r:
+                  data=json.load(r)
+              print('TOP_KEYS', sorted(data.keys()))
+              for key in ['name','uid','slug','files','viewerUrl','thumbnails','archives','license','user']:
+                  if key in data:
+                      value=data[key]
+                      if key == 'files':
+                          print('FILES_TYPE', type(value).__name__)
+                          print(json.dumps(value, indent=2)[:12000])
+                      else:
+                          print(key.upper(), json.dumps(value)[:4000])
+          except Exception as e:
+              print('ERROR', type(e).__name__, str(e))
+              raise
+          PY
