@@ -2657,3 +2657,23 @@ body::-webkit-scrollbar,
 }
 
 /* ===== APPLE SERVICES REDESIGN: END ===== */
+
+
+/* ===== SERVICES CLICK LAYER FIX ===== */
+.archive-drag-proxy {
+  inset: auto;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.archive-seamless-stage {
+  cursor: grab;
+}
+
+.archive-seamless-stage.is-dragging {
+  cursor: grabbing;
+}
