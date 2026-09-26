@@ -2758,7 +2758,7 @@ body::-webkit-scrollbar,
 
 .specialties-marquees {
   display: grid;
-  gap: clamp(0.9rem, 1.8vh, 1.35rem);
+  gap: clamp(1.55rem, 3.4vh, 2.5rem);
   width: 100%;
   margin-top: clamp(2.6rem, 6vh, 5rem);
 }
@@ -2813,16 +2813,9 @@ body::-webkit-scrollbar,
   font-weight: 520;
   line-height: 1;
   white-space: nowrap;
-  transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
+  transition: none;
 }
 
-.specialty-pill:hover {
-  z-index: 2;
-  transform: translateY(-2px) scale(1.035);
-  border-color: #fff;
-  background: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 0 28px rgba(212, 96, 197, 0.16), 0 12px 34px rgba(0, 0, 0, 0.2);
-}
 
 @keyframes specialties-scroll-left {
   from { transform: translate3d(0, 0, 0); }
@@ -2867,7 +2860,7 @@ body::-webkit-scrollbar,
   }
 
   .specialties-marquees {
-    gap: 0.82rem;
+    gap: 1.35rem;
     margin-top: 2.2rem;
   }
 
