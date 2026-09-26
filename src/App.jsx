@@ -1776,11 +1776,118 @@ export default function App() {
         </section>
       </section>
 
-      <section className="chapter-page full-page-section" id="about">
-        <div className="chapter-page-copy">
-          <p>About</p>
-          <h2>About John Wolf.</h2>
-          <span>The designer, process, and point of view behind the work.</span>
+      <section
+        className="chapter-page specialties-page full-page-section"
+        id="about"
+      >
+        <video
+          className="specialties-background-video"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          aria-hidden="true"
+        >
+          <source
+            src="/assets/about/specialties-background.mp4"
+            type="video/mp4"
+          />
+        </video>
+
+        <div
+          className="specialties-background-shade"
+          aria-hidden="true"
+        />
+
+        <div className="specialties-interface">
+          <header className="specialties-heading">
+            <p>SPECIALTIES</p>
+            <h2>BEYOND DESIGN</h2>
+            <span>
+              20+ years of visual problem-solving across design,
+              branding, illustration, web, and AI-assisted creative work.
+            </span>
+          </header>
+
+          <div
+            className="specialties-marquees"
+            aria-label="Creative specialties and tools"
+          >
+            {[
+              {
+                direction: 'left',
+                items: [
+                  'Logo Design',
+                  'Branding',
+                  'Brand Guidelines',
+                  'Graphic Design',
+                  'Illustration',
+                  'Creative Direction',
+                  'Cover Art',
+                  'Visual Identity',
+                ],
+              },
+              {
+                direction: 'right',
+                items: [
+                  'Photoshop',
+                  'Illustrator',
+                  'Adobe Firefly',
+                  'Procreate',
+                  'Canva',
+                  'Figma',
+                  'Vercel',
+                  'GitHub',
+                ],
+              },
+              {
+                direction: 'left',
+                items: [
+                  'Web Design',
+                  'Web Development',
+                  'GSAP',
+                  'Motion Design',
+                  'ChatGPT',
+                  'Lovable.AI',
+                  'AI Imaging',
+                  'AI Video',
+                  'Concept Development',
+                ],
+              },
+            ].map((row, rowIndex) => (
+              <div
+                className={`specialties-row specialties-row--${row.direction}`}
+                key={`${row.direction}-${rowIndex}`}
+              >
+                <div className="specialties-track">
+                  <div className="specialties-group">
+                    {row.items.map((item) => (
+                      <span
+                        className="specialty-pill"
+                        key={`${rowIndex}-${item}`}
+                      >
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                  <div
+                    className="specialties-group"
+                    aria-hidden="true"
+                  >
+                    {row.items.map((item) => (
+                      <span
+                        className="specialty-pill"
+                        key={`${rowIndex}-${item}-duplicate`}
+                      >
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
