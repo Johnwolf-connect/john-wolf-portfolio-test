@@ -3193,3 +3193,15 @@ body::-webkit-scrollbar,
   font-weight: 700;
 }
 /* ===== NEUE HAAS DISPLAY HEADINGS: END ===== */
+
+/* ===== SERVICES CARD TEXT BOUNDARY FIX ===== */
+@media (min-width: 821px) {
+  .portfolio-page .carousel-viewport.archive-seamless-stage {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: calc(var(--page-gutter) + min(25rem, 29vw) + 1.5rem);
+    overflow: hidden;
+  }
+}
+/* ===== SERVICES CARD TEXT BOUNDARY FIX: END ===== */
