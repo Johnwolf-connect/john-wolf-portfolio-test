@@ -3205,3 +3205,13 @@ body::-webkit-scrollbar,
   }
 }
 /* ===== SERVICES CARD TEXT BOUNDARY FIX: END ===== */
+
+
+/* ===== SERVICES CARD SIZE / ENTRY POSITION ===== */
+@media (min-width: 821px) {
+  .portfolio-page .archive-seamless-card {
+    left: 54%;
+    width: clamp(215px, 22vw, 325px);
+  }
+}
+/* ===== SERVICES CARD SIZE / ENTRY POSITION: END ===== */
