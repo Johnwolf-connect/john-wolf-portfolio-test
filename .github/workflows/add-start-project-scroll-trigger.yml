@@ -21,34 +21,32 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
 
           app_path = Path('src/App.jsx')
           css_path = Path('src/styles.css')
           app = app_path.read_text()
           css = css_path.read_text()
 
-          state_anchor = "  const [brandProjectIndex, setBrandProjectIndex] = useState(0)\n"
           if "const [contactOpen, setContactOpen]" not in app:
-              if state_anchor not in app:
+              anchor = "  const [brandProjectIndex, setBrandProjectIndex] = useState(0)\n"
+              if anchor not in app:
                   raise SystemExit('contact state anchor not found')
               app = app.replace(
-                  state_anchor,
-                  state_anchor
+                  anchor,
+                  anchor
                   + "  const [contactOpen, setContactOpen] = useState(false)\n"
                   + "  const contactReturnY = useRef(0)\n"
                   + "  const contactReturnNavigation = useRef('About')\n",
                   1,
               )
 
-          nav_anchor = """  const navigateToSection = (
-            item,
-            closeBrandPage = false,
-          ) => {
-            const target = navigationTargets[item]
-
-            if (!target) return
-          """
-          nav_replacement = """  const navigateToSection = (
+          if "const showContactExperience" not in app:
+              nav_pattern = re.compile(
+                  r"  const navigateToSection = \(\s*item,\s*closeBrandPage = false,\s*\) => \{\s*const target = navigationTargets\[item\]\s*if \(!target\) return",
+                  re.S,
+              )
+              nav_replacement = """  const navigateToSection = (
             item,
             closeBrandPage = false,
           ) => {
@@ -87,15 +85,21 @@ jobs:
 
             const target = navigationTargets[item]
 
-            if (!target) return
-          """
-          if nav_anchor in app:
-              app = app.replace(nav_anchor, nav_replacement, 1)
-          elif "const showContactExperience" not in app:
-              raise SystemExit('navigateToSection anchor not found')
+            if (!target) return"""
+              app, count = nav_pattern.subn(
+                  nav_replacement,
+                  app,
+                  count=1,
+              )
+              if count != 1:
+                  raise SystemExit('navigateToSection anchor not found')
 
-          effect_anchor = "  useEffect(() => {\n    const handleEscape = (event) => {"
-          contact_effects = """  useEffect(() => {
+          if "const openFromAboutEnd" not in app:
+              effect_anchor = "  useEffect(() => {\n    const handleEscape = (event) => {"
+              if effect_anchor not in app:
+                  raise SystemExit('scroll effect anchor not found')
+
+              contact_effects = """  useEffect(() => {
             if (!contactOpen) return undefined
 
             const previousHtmlOverflow =
@@ -272,24 +276,19 @@ jobs:
           ])
 
           """
-          if effect_anchor in app:
               app = app.replace(
                   effect_anchor,
                   contact_effects + effect_anchor,
                   1,
               )
-          elif "const openFromAboutEnd" not in app:
-              raise SystemExit('scroll effect anchor not found')
 
-          contact_section = """      <section className=\"chapter-page full-page-section\" id=\"contact\">
-                <div className=\"chapter-page-copy\">
-                  <p>Contact</p>
-                  <h2>Start something.</h2>
-                  <span>A full-screen closing chapter built around the next project.</span>
-                </div>
-              </section>
-          """
-          contact_overlay = """      {contactOpen && (
+          if 'className="contact-experience"' not in app:
+              contact_pattern = re.compile(
+                  r'\s*<section className="chapter-page full-page-section" id="contact">.*?</section>',
+                  re.S,
+              )
+              contact_overlay = """
+              {contactOpen && (
                 <div
                   className=\"contact-experience\"
                   id=\"contact\"
@@ -330,15 +329,14 @@ jobs:
                   </div>
                 </div>
               )}
-          """
-          if contact_section in app:
-              app = app.replace(
-                  contact_section,
+              """
+              app, count = contact_pattern.subn(
                   contact_overlay,
-                  1,
+                  app,
+                  count=1,
               )
-          elif 'className="contact-experience"' not in app:
-              raise SystemExit('Contact section anchor not found')
+              if count != 1:
+                  raise SystemExit('Contact section anchor not found')
 
           marker = '/* === START A PROJECT SCROLL EXPERIENCE === */'
           if marker not in css:
@@ -426,15 +424,11 @@ jobs:
           }
 
           .contact-experience-close span:first-child {
-            transform:
-              translate(-50%, -50%)
-              rotate(45deg);
+            transform: translate(-50%, -50%) rotate(45deg);
           }
 
           .contact-experience-close span:last-child {
-            transform:
-              translate(-50%, -50%)
-              rotate(-45deg);
+            transform: translate(-50%, -50%) rotate(-45deg);
           }
 
           @keyframes contactExperienceIn {
