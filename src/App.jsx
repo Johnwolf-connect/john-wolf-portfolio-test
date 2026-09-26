@@ -222,6 +222,9 @@ export default function App() {
   const [froidPageOpen, setFroidPageOpen] = useState(false)
   const [brandVaultOpen, setBrandVaultOpen] = useState(false)
   const [brandProjectIndex, setBrandProjectIndex] = useState(0)
+  const [contactOpen, setContactOpen] = useState(false)
+  const contactReturnY = useRef(0)
+  const contactReturnNavigation = useRef('About')
 
   const activeBrandProject =
     brandGuidelineProjects[brandProjectIndex]
@@ -498,12 +501,39 @@ export default function App() {
   }
 
   const navigateToSection = (
-    item,
-    closeBrandPage = false,
-  ) => {
-    const target = navigationTargets[item]
+  item,
+  closeBrandPage = false,
+) => {
+  if (item === 'Contact') {
+    setMenuOpen(false)
+    contactReturnY.current = window.scrollY
+    contactReturnNavigation.current = activeNavigation
 
-    if (!target) return
+    const showContactExperience = () => {
+      setActiveNavigation('Contact')
+      setContactOpen(true)
+    }
+
+    if (
+      closeBrandPage &&
+      (brandPageOpen || websitesPageOpen || froidPageOpen)
+    ) {
+      setBrandPageOpen(false)
+      setWebsitesPageOpen(false)
+      setFroidPageOpen(false)
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(showContactExperience)
+      })
+      return
+    }
+
+    showContactExperience()
+    return
+  }
+
+  const target = navigationTargets[item]
+
+  if (!target) return
 
     setActiveNavigation(item)
     setMenuOpen(false)
@@ -719,6 +749,168 @@ export default function App() {
       }
     }
   }, [activeCard, brandPageOpen, websitesPageOpen, froidPageOpen])
+
+  useEffect(() => {
+  if (!contactOpen) return undefined
+
+  const previousHtmlOverflow =
+    document.documentElement.style.overflow
+  const previousBodyOverflow =
+    document.body.style.overflow
+
+  document.documentElement.style.overflow = 'hidden'
+  document.body.style.overflow = 'hidden'
+
+  const overlay = document.querySelector(
+    '.contact-experience',
+  )
+
+  if (overlay) {
+    gsap.fromTo(
+      overlay,
+      {
+        opacity: 0,
+        y: 34,
+        scale: 0.985,
+        filter: 'blur(8px)',
+      },
+      {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        filter: 'blur(0px)',
+        duration: 0.72,
+        ease: 'power3.out',
+      },
+    )
+  }
+
+  const closeContactExperience = () => {
+    setContactOpen(false)
+    setActiveNavigation(
+      contactReturnNavigation.current,
+    )
+
+    window.requestAnimationFrame(() => {
+      window.scrollTo({
+        top: contactReturnY.current,
+        behavior: 'auto',
+      })
+    })
+  }
+
+  const handleContactEscape = (event) => {
+    if (event.key === 'Escape') {
+      closeContactExperience()
+    }
+  }
+
+  window.addEventListener(
+    'keydown',
+    handleContactEscape,
+  )
+
+  return () => {
+    window.removeEventListener(
+      'keydown',
+      handleContactEscape,
+    )
+    document.documentElement.style.overflow =
+      previousHtmlOverflow
+    document.body.style.overflow =
+      previousBodyOverflow
+  }
+}, [contactOpen])
+
+useEffect(() => {
+  let touchStartY = null
+  let triggerLocked = false
+
+  const isAtAboutEnd = () => {
+    const about = document.querySelector('#about')
+    if (!about) return false
+
+    const rect = about.getBoundingClientRect()
+    const atDocumentEnd =
+      window.scrollY + window.innerHeight >=
+      document.documentElement.scrollHeight - 4
+
+    return (
+      atDocumentEnd &&
+      rect.bottom <= window.innerHeight + 6
+    )
+  }
+
+  const openFromAboutEnd = () => {
+    if (
+      triggerLocked ||
+      contactOpen ||
+      brandPageOpen ||
+      websitesPageOpen ||
+      froidPageOpen ||
+      !isAtAboutEnd()
+    ) {
+      return
+    }
+
+    triggerLocked = true
+    contactReturnY.current = window.scrollY
+    contactReturnNavigation.current = 'About'
+    setActiveNavigation('Contact')
+    setContactOpen(true)
+
+    window.setTimeout(() => {
+      triggerLocked = false
+    }, 650)
+  }
+
+  const handleWheel = (event) => {
+    if (event.deltaY > 12) openFromAboutEnd()
+  }
+
+  const handleTouchStart = (event) => {
+    touchStartY = event.touches?.[0]?.clientY ?? null
+  }
+
+  const handleTouchEnd = (event) => {
+    const endY = event.changedTouches?.[0]?.clientY
+    if (
+      touchStartY !== null &&
+      Number.isFinite(endY) &&
+      touchStartY - endY > 34
+    ) {
+      openFromAboutEnd()
+    }
+    touchStartY = null
+  }
+
+  const handleEndKey = (event) => {
+    if (
+      event.key === 'ArrowDown' ||
+      event.key === 'PageDown' ||
+      event.key === ' '
+    ) {
+      openFromAboutEnd()
+    }
+  }
+
+  window.addEventListener('wheel', handleWheel, { passive: true })
+  window.addEventListener('touchstart', handleTouchStart, { passive: true })
+  window.addEventListener('touchend', handleTouchEnd, { passive: true })
+  window.addEventListener('keydown', handleEndKey)
+
+  return () => {
+    window.removeEventListener('wheel', handleWheel)
+    window.removeEventListener('touchstart', handleTouchStart)
+    window.removeEventListener('touchend', handleTouchEnd)
+    window.removeEventListener('keydown', handleEndKey)
+  }
+}, [
+  contactOpen,
+  brandPageOpen,
+  websitesPageOpen,
+  froidPageOpen,
+])
 
   useEffect(() => {
     if (!brandPageOpen) return undefined
@@ -1916,14 +2108,58 @@ export default function App() {
           </div>
         </div>
       </section>
+    {contactOpen && (
+      <div
+        className="contact-experience chapter-page"
+        id="contact"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="contact-experience-title"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 11000,
+          minHeight: '100svh',
+        }}
+      >
+        <button
+          className="header-cta"
+          type="button"
+          aria-label="Close Start a Project"
+          style={{
+            position: 'absolute',
+            top: '1.5rem',
+            right: 'var(--page-gutter)',
+            zIndex: 2,
+          }}
+          onClick={() => {
+            setContactOpen(false)
+            setActiveNavigation(
+              contactReturnNavigation.current,
+            )
+            window.requestAnimationFrame(() => {
+              window.scrollTo({
+                top: contactReturnY.current,
+                behavior: 'auto',
+              })
+            })
+          }}
+        >
+          Close <span aria-hidden="true">×</span>
+        </button>
 
-      <section className="chapter-page full-page-section" id="contact">
         <div className="chapter-page-copy">
           <p>Contact</p>
-          <h2>Start something.</h2>
-          <span>A full-screen closing chapter built around the next project.</span>
+          <h2 id="contact-experience-title">
+            Start something.
+          </h2>
+          <span>
+            A full-screen closing chapter built around the next project.
+          </span>
         </div>
-      </section>
+      </div>
+    )}
+    
 
       {brandPageOpen && (
         <section
