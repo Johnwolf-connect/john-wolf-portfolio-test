@@ -20,6 +20,16 @@ jobs:
         with:
           node-version: 20
 
+      - name: Repair and verify staged video chunks
+        run: |
+          rm -f .tmp-about-video/part00.b64
+          sed -i 's/ZGF0AAICrg/ZGF0AAACrg/' .tmp-about-video/part00a.b64
+          test "$(git hash-object .tmp-about-video/part00a.b64)" = "a22e39b3e95af79570f5b85aa30d8cdbdd72ec1d"
+          test "$(git hash-object .tmp-about-video/part00b.b64)" = "23a29561a500891fdab050e5e9f95edfbf0a9674"
+          cat .tmp-about-video/part00a.b64 .tmp-about-video/part00b.b64 > .tmp-about-video/part00.b64
+          test "$(git hash-object .tmp-about-video/part00.b64)" = "d602a166befd731040980cf50253323442d0ace4"
+          rm -f .tmp-about-video/part00a.b64 .tmp-about-video/part00b.b64
+
       - name: Apply About Specialties source and video
         run: python .tmp-about-video/apply.py
 
