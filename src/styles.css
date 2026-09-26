@@ -2787,25 +2787,25 @@ body::-webkit-scrollbar,
 }
 
 .specialties-group {
+  --specialty-gap: clamp(0.85rem, 1.2vw, 1.15rem);
   display: flex;
   flex: none;
   align-items: center;
-  justify-content: space-evenly;
-  min-width: 100vw;
-  gap: clamp(0.72rem, 1.1vw, 1rem);
-  padding: 0 clamp(0.72rem, 1.15vw, 1.05rem);
+  width: max-content;
+  gap: var(--specialty-gap);
+  padding-right: var(--specialty-gap);
 }
 
 .specialties-row--left .specialties-track {
-  animation: specialties-scroll-left 54s linear infinite;
+  animation: specialties-scroll-left 108s linear infinite;
 }
 
 .specialties-row--right .specialties-track {
-  animation: specialties-scroll-right 60s linear infinite;
+  animation: specialties-scroll-right 120s linear infinite;
 }
 
 .specialties-row:nth-child(3) .specialties-track {
-  animation-duration: 57s;
+  animation-duration: 114s;
 }
 
 .specialty-pill {

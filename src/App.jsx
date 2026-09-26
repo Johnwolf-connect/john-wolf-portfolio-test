@@ -2080,10 +2080,10 @@ useEffect(() => {
               >
                 <div className="specialties-track">
                   <div className="specialties-group">
-                    {row.items.map((item) => (
+                    {[...row.items, ...row.items].map((item, itemIndex) => (
                       <span
                         className="specialty-pill"
-                        key={`${rowIndex}-${item}`}
+                        key={`${rowIndex}-${item}-${itemIndex}`}
                       >
                         {item}
                       </span>
@@ -2093,10 +2093,10 @@ useEffect(() => {
                     className="specialties-group"
                     aria-hidden="true"
                   >
-                    {row.items.map((item) => (
+                    {[...row.items, ...row.items].map((item, itemIndex) => (
                       <span
                         className="specialty-pill"
-                        key={`${rowIndex}-${item}-duplicate`}
+                        key={`${rowIndex}-${item}-${itemIndex}-duplicate`}
                       >
                         {item}
                       </span>
