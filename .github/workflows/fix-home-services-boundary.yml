@@ -1,0 +1,62 @@
+name: Fix Home Services boundary
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-home-services-boundary.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Contain Home content before Services
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/styles.css')
+          css = path.read_text()
+          marker = '/* ===== HOME / SERVICES SECTION BOUNDARY FIX ===== */'
+          if marker not in css:
+              anchor = ".experience-sticky {\n  top: auto;\n}\n"
+              if anchor not in css:
+                  raise SystemExit('experience-sticky anchor not found')
+              fix = """
+
+/* ===== HOME / SERVICES SECTION BOUNDARY FIX ===== */
+@media (min-width: 901px) {
+  .experience-sticky {
+    height: max(100svh, 54rem);
+    min-height: 54rem;
+  }
+}
+/* ===== HOME / SERVICES SECTION BOUNDARY FIX: END ===== */
+"""
+              css = css.replace(anchor, anchor + fix, 1)
+              path.write_text(css)
+          PY
+
+      - name: Verify production build
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+
+      - name: Publish and clean updater
+        run: |
+          rm -f .github/workflows/fix-home-services-boundary.yml
+          git config user.name "John Wolf"
+          git config user.email "136143744+Johnwolf-connect@users.noreply.github.com"
+          git add src/styles.css .github/workflows/fix-home-services-boundary.yml
+          git commit -m "Fix Home and Services section boundary"
+          git push
