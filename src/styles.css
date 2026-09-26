@@ -96,6 +96,16 @@ a:focus-visible {
   top: auto;
 }
 
+
+/* ===== HOME / SERVICES SECTION BOUNDARY FIX ===== */
+@media (min-width: 901px) {
+  .experience-sticky {
+    height: max(100svh, 54rem);
+    min-height: 54rem;
+  }
+}
+/* ===== HOME / SERVICES SECTION BOUNDARY FIX: END ===== */
+
 .video-atmosphere {
   position: absolute;
   top: 50%;
