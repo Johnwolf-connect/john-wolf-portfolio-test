@@ -1147,8 +1147,8 @@ export default function App() {
         const distance = Math.abs(offset)
         const visible = distance < 2.15
         const scale = Math.max(
-          0.68,
-          1 - distance * 0.17,
+          0.76,
+          1 - distance * 0.08,
         )
         const opacity = visible
           ? Math.max(
@@ -1159,7 +1159,7 @@ export default function App() {
 
         const vars = {
           xPercent:
-            -50 + offset * 118,
+            -50 + offset * 100,
           yPercent:
             -50 + Math.min(distance, 2) * 2.4,
           scale,
@@ -1621,6 +1621,9 @@ export default function App() {
             <div className="carousel-heading">
               <p>Services</p>
               <h2>Move through the work.</h2>
+              <span className="services-intro">
+                We design experiences that feel effortless from the first frame to the last.
+              </span>
               <button
                 className="services-contact-button"
                 type="button"
@@ -1628,8 +1631,16 @@ export default function App() {
                   navigateToSection('Contact', true)
                 }
               >
-                Contact
-                <span aria-hidden="true">↗</span>
+                <svg
+                  className="services-contact-icon"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="5" width="18" height="14" rx="2" />
+                  <path d="m4 7 8 6 8-6" />
+                </svg>
+                Contact Us
+                <span aria-hidden="true">→</span>
               </button>
             </div>
 
@@ -1764,9 +1775,30 @@ export default function App() {
               </div>
             </div>
 
-            <div className="carousel-scroll-note">
-              <span>Scroll / drag · snap to explore</span>
-              <i />
+            <div className="services-scroll-cue" aria-hidden="true">
+              <span>↓</span>
+              <small>Scroll to explore</small>
+            </div>
+
+            <div className="services-card-nav" aria-label="Service card navigation">
+              <button
+                type="button"
+                aria-label="Previous service"
+                onClick={() =>
+                  archiveLoopApi.current?.moveBy?.(-1)
+                }
+              >
+                ←
+              </button>
+              <button
+                type="button"
+                aria-label="Next service"
+                onClick={() =>
+                  archiveLoopApi.current?.moveBy?.(1)
+                }
+              >
+                →
+              </button>
             </div>
           </div>
         </section>
