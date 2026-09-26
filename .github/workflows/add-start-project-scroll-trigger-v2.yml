@@ -83,12 +83,12 @@ jobs:
                   raise SystemExit('navigation anchor missing')
 
           if "const openFromAboutEnd" not in app:
-              anchor = """  useEffect(() => {
-            if (!brandPageOpen) return undefined
-
-            const oldHtmlOverflow =
-          """
-              if anchor not in app:
+              effect_pattern = re.compile(
+                  r"  useEffect\(\(\) => \{\s*if \(!brandPageOpen\) return undefined\s*const oldHtmlOverflow\s*=",
+                  re.S,
+              )
+              match = effect_pattern.search(app)
+              if not match:
                   raise SystemExit('top-level effect anchor missing')
 
               effects = """  useEffect(() => {
@@ -254,7 +254,7 @@ jobs:
           ])
 
           """
-              app = app.replace(anchor, effects + anchor, 1)
+              app = app[:match.start()] + effects + app[match.start():]
 
           if 'className="contact-experience chapter-page"' not in app:
               pattern = re.compile(
