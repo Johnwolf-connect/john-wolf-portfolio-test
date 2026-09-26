@@ -1,0 +1,68 @@
+name: Remove Testimonials section
+
+on:
+  push:
+    paths:
+      - '.github/workflows/remove-testimonials-section.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  remove:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Remove Testimonials section and navigation
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('src/App.jsx')
+          text = path.read_text()
+
+          text = text.replace(
+              "const navigation = ['Home', 'Services', 'About', 'Testimonials', 'Contact']",
+              "const navigation = ['Home', 'Services', 'About', 'Contact']",
+          )
+
+          text = text.replace("  Testimonials: '#testimonials',\n", "")
+          text = text.replace("        'Testimonials',\n", "")
+
+          text, count = re.subn(
+              r'\n\s*<section className="chapter-page full-page-section" id="testimonials">.*?</section>\n',
+              '\n',
+              text,
+              flags=re.S,
+          )
+
+          if count != 1:
+              raise SystemExit(f'Expected to remove 1 Testimonials section, removed {count}')
+
+          if 'Testimonials' in text:
+              raise SystemExit('Testimonials reference still remains in App.jsx')
+
+          path.write_text(text)
+          PY
+
+      - name: Verify production build
+        run: |
+          npm install
+          npm run build
+
+      - name: Publish and clean updater
+        run: |
+          git config user.name "John Wolf"
+          git config user.email "136143744+Johnwolf-connect@users.noreply.github.com"
+          git add src/App.jsx
+          git rm .github/workflows/remove-testimonials-section.yml
+          git commit -m "Remove Testimonials section completely"
+          git push
