@@ -1,0 +1,40 @@
+name: Apply About Specialties V2
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-about-specialties-v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Apply About Specialties source and video
+        run: python .tmp-about-video/apply.py
+
+      - name: Verify production build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Clean temporary staging and publish
+        run: |
+          rm -rf .tmp-about-video
+          rm -f .github/workflows/apply-about-specialties.yml
+          rm -f .github/workflows/apply-about-specialties-v2.yml
+          git config user.name 'johnwolf-site-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -A
+          git commit -m 'Redesign About as animated Specialties experience [about-specialties-applied]'
+          git push origin HEAD:main
