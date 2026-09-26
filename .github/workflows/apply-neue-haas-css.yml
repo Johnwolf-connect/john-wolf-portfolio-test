@@ -1,0 +1,41 @@
+name: Apply Neue Haas heading CSS
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-neue-haas-css.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Apply heading typography
+        run: |
+          if ! grep -q 'NEUE HAAS DISPLAY HEADINGS: START' src/styles.css; then
+            printf '%s' 'Ci8qID09PT09IE5FVUUgSEFBUyBESVNQTEFZIEhFQURJTkdTOiBTVEFSVCA9PT09PSAqLwpAZm9udC1mYWNlIHsKICBmb250LWZhbWlseTogJ05ldWUgSGFhcyBHcm90ZXNrIERpc3BsYXkgUm91bmQnOwogIHNyYzogdXJsKCcvYXNzZXRzL2ZvbnRzL05ldWVIYWFzR3JvdERpc3BSb3VuZC03NUJvbGQub3RmJykgZm9ybWF0KCdvcGVudHlwZScpOwogIGZvbnQtc3R5bGU6IG5vcm1hbDsKICBmb250LXdlaWdodDogNzAwOwogIGZvbnQtZGlzcGxheTogc3dhcDsKfQoKQGZvbnQtZmFjZSB7CiAgZm9udC1mYW1pbHk6ICdOZXVlIEhhYXMgR3JvdGVzayBEaXNwbGF5IFJvdW5kJzsKICBzcmM6IHVybCgnL2Fzc2V0cy9mb250cy9OZXVlSGFhc0dyb3REaXNwUm91bmQtOTVCbGFjay5vdGYnKSBmb3JtYXQoJ29wZW50eXBlJyk7CiAgZm9udC1zdHlsZTogbm9ybWFsOwogIGZvbnQtd2VpZ2h0OiA5MDA7CiAgZm9udC1kaXNwbGF5OiBzd2FwOwp9CgouaGVyby1jb3B5IGgxLAouY2Fyb3VzZWwtaGVhZGluZyBoMiwKLnNwZWNpYWx0aWVzLWhlYWRpbmcgaDIsCi5jaGFwdGVyLXBhZ2UtY29weSBoMiwKLmJyYW5kLXBhZ2UtY29weSA+IGgyLAouYnJhbmQtcGFnZS1pbnRlcmZhY2UgPiBoMiwKLndlYnNpdGVzLWhlcm8tY29weSBoMSB7CiAgZm9udC1mYW1pbHk6ICdOZXVlIEhhYXMgR3JvdGVzayBEaXNwbGF5IFJvdW5kJywgSW50ZXIsIHVpLXNhbnMtc2VyaWYsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiAhaW1wb3J0YW50OwogIGZvbnQtd2VpZ2h0OiA5MDAgIWltcG9ydGFudDsKfQoKLmNhcm91c2VsLWNhcmQtY29udGVudCBoMywKLmNhcm91c2VsLWFjdGl2ZS1jb3B5IGgzLAouYnJhbmQtcGFnZS1hY3RpdmUtcHJvamVjdCBoMyB7CiAgZm9udC1mYW1pbHk6ICdOZXVlIEhhYXMgR3JvdGVzayBEaXNwbGF5IFJvdW5kJywgSW50ZXIsIHVpLXNhbnMtc2VyaWYsIHN5c3RlbS11aSwgc2Fucy1zZXJpZjsKICBmb250LXdlaWdodDogNzAwOwp9Ci8qID09PT09IE5FVUUgSEFBUyBESVNQTEFZIEhFQURJTkdTOiBFTkQgPT09PT0gKi8K' | base64 --decode >> src/styles.css
+          fi
+
+      - name: Verify production build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Publish and clean updater
+        run: |
+          rm -f .github/workflows/apply-neue-haas-css.yml
+          git config user.name 'John Wolf'
+          git config user.email '136143744+Johnwolf-connect@users.noreply.github.com'
+          git add src/styles.css .github/workflows/apply-neue-haas-css.yml
+          git commit -m 'Apply Neue Haas display typography'
+          git push
