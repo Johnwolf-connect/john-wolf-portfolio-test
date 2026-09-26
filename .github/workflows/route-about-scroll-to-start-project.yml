@@ -21,42 +21,14 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-
           path = Path('src/App.jsx')
           app = path.read_text()
-
-          old = """    triggerLocked = true
-    contactReturnY.current = window.scrollY
-    contactReturnNavigation.current = 'About'
-    setActiveNavigation('Contact')
-    setContactOpen(true)
-
-    window.setTimeout(() => {
-      triggerLocked = false
-    }, 650)
-"""
-
-          new = """    triggerLocked = true
-    setActiveNavigation('Contact')
-
-    const startProject =
-      window.__johnWolfStartProjectTransition
-
-    if (startProject?.open) {
-      startProject.open()
-    }
-
-    window.setTimeout(() => {
-      triggerLocked = false
-    }, 650)
-"""
-
+          old = "    triggerLocked = true\n    contactReturnY.current = window.scrollY\n    contactReturnNavigation.current = 'About'\n    setActiveNavigation('Contact')\n    setContactOpen(true)\n\n    window.setTimeout(() => {\n      triggerLocked = false\n    }, 650)\n"
+          new = "    triggerLocked = true\n    setActiveNavigation('Contact')\n\n    const startProject =\n      window.__johnWolfStartProjectTransition\n\n    if (startProject?.open) {\n      startProject.open()\n    }\n\n    window.setTimeout(() => {\n      triggerLocked = false\n    }, 650)\n"
           if old not in app:
               raise SystemExit('About-end Start a Project trigger block not found')
-
           app = app.replace(old, new, 1)
           path.write_text(app)
-
           assert 'window.__johnWolfStartProjectTransition' in app
           assert 'startProject.open()' in app
           print('About-end scroll now opens the existing Start a Project transition')
