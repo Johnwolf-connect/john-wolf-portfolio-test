@@ -86,13 +86,6 @@ const carouselCards = [
     poster: '/assets/carousel/illustrations.jpg',
   },
   {
-    title: 'About',
-    eyebrow: 'The designer',
-    description: 'The thinking, standards, and experience behind the work.',
-    video: '/assets/carousel/about.mp4',
-    poster: '/assets/carousel/about.jpg',
-  },
-  {
     title: 'Contact',
     eyebrow: 'Start something',
     description: 'Bring the idea. We will shape the visual experience around it.',
