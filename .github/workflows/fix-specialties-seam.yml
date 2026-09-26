@@ -1,0 +1,124 @@
+name: Seamless specialties rows
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-specialties-seam.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Make all three specialties rows seamless
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          app_path = Path('src/App.jsx')
+          app = app_path.read_text()
+
+          old_first = """{row.items.map((item) => (
+                      <span
+                        className=\"specialty-pill\"
+                        key={`${rowIndex}-${item}`}
+                      >"""
+          new_first = """{[...row.items, ...row.items].map((item, itemIndex) => (
+                      <span
+                        className=\"specialty-pill\"
+                        key={`${rowIndex}-${item}-${itemIndex}`}
+                      >"""
+
+          if old_first not in app:
+              raise SystemExit('first specialties group renderer not found')
+          app = app.replace(old_first, new_first, 1)
+
+          old_second = """{row.items.map((item) => (
+                      <span
+                        className=\"specialty-pill\"
+                        key={`${rowIndex}-${item}-duplicate`}
+                      >"""
+          new_second = """{[...row.items, ...row.items].map((item, itemIndex) => (
+                      <span
+                        className=\"specialty-pill\"
+                        key={`${rowIndex}-${item}-${itemIndex}-duplicate`}
+                      >"""
+
+          if old_second not in app:
+              raise SystemExit('second specialties group renderer not found')
+          app = app.replace(old_second, new_second, 1)
+          app_path.write_text(app)
+
+          css_path = Path('src/styles.css')
+          css = css_path.read_text()
+
+          old_group = """.specialties-group {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-evenly;
+  min-width: 100vw;
+  gap: clamp(0.72rem, 1.1vw, 1rem);
+  padding: 0 clamp(0.72rem, 1.15vw, 1.05rem);
+}
+"""
+          new_group = """.specialties-group {
+  --specialty-gap: clamp(0.85rem, 1.2vw, 1.15rem);
+  display: flex;
+  flex: none;
+  align-items: center;
+  width: max-content;
+  gap: var(--specialty-gap);
+  padding-right: var(--specialty-gap);
+}
+"""
+
+          if old_group not in css:
+              raise SystemExit('current specialties group block not found')
+          css = css.replace(old_group, new_group, 1)
+
+          css = css.replace(
+              "animation: specialties-scroll-left 54s linear infinite;",
+              "animation: specialties-scroll-left 108s linear infinite;",
+              1,
+          )
+          css = css.replace(
+              "animation: specialties-scroll-right 60s linear infinite;",
+              "animation: specialties-scroll-right 120s linear infinite;",
+              1,
+          )
+          css = css.replace(
+              "animation-duration: 57s;",
+              "animation-duration: 114s;",
+              1,
+          )
+
+          css_path.write_text(css)
+
+          assert '[...row.items, ...row.items]' in app
+          assert 'padding-right: var(--specialty-gap);' in css
+          assert 'space-evenly' not in css[css.find('.specialties-group {'):css.find('.specialties-row--left')]
+          print('Rows 1, 2, and 3 now use equal fixed gaps with seamless duplicate sequences')
+          PY
+
+      - name: Verify production build
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+
+      - name: Publish and clean updater
+        run: |
+          git config user.name 'John Wolf'
+          git config user.email '136143744+Johnwolf-connect@users.noreply.github.com'
+          git add src/App.jsx src/styles.css
+          git commit -m 'Make all specialty rows seamless and evenly spaced'
+          git rm -f .github/workflows/fix-specialties-seam.yml
+          git commit -m 'Clean specialties seam updater'
+          git push origin main
