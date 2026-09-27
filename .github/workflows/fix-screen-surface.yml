@@ -1,0 +1,33 @@
+name: Fix Screen Surface
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-screen-surface.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Restore real MacBook display
+        run: |
+          echo 'ZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCnA9UGF0aCgic3JjL3N0YXJ0LXByb2plY3QtdHJhbnNpdGlvbi1jb3JlLmpzIikKcz1wLnJlYWRfdGV4dCgpCm9sZD0iICAgICAgICBzY3JlZW5QbGFuZS52aXNpYmxlID0gZmFsc2VcbiAgICAgICAgbGlkUGl2b3Qucm90YXRpb24ueCA9IENMT1NFRF9BTkdMRSIKbmV3PSIiIiAgICAgICAgY29uc3Qgc2NyZWVuVGV4dHVyZSA9IG5ldyBUSFJFRS5UZXh0dXJlTG9hZGVyKCkubG9hZCgnL2Fzc2V0cy9zdGFydC1wcm9qZWN0L21hY2Jvb2svaG9tZV9zY3JlZW5fZGlmZi5qcGcnKQogICAgICAgIHNjcmVlblRleHR1cmUuY29sb3JTcGFjZSA9IFRIUkVFLlNSR0JDb2xvclNwYWNlCiAgICAgICAgc2NyZWVuVGV4dHVyZS5mbGlwWSA9IGZhbHNlCiAgICAgICAgc2NyZWVuUGxhbmUubWF0ZXJpYWwgPSBuZXcgVEhSRUUuTWVzaEJhc2ljTWF0ZXJpYWwoeyBtYXA6IHNjcmVlblRleHR1cmUsIGNvbG9yOiAweGZmZmZmZiwgdG9uZU1hcHBlZDogZmFsc2UsIHNpZGU6IFRIUkVFLkRvdWJsZVNpZGUgfSkKICAgICAgICBzY3JlZW5QbGFuZS52aXNpYmxlID0gdHJ1ZQogICAgICAgIGxpZFBpdm90LnJvdGF0aW9uLnggPSBDTE9TRURfQU5HTEUiIiIKaWYgb2xkIG5vdCBpbiBzOiByYWlzZSBTeXN0ZW1FeGl0KCJoaWRkZW4gc2NyZWVuIGJsb2NrIG5vdCBmb3VuZCIpCnAud3JpdGVfdGV4dChzLnJlcGxhY2Uob2xkLG5ldywxKSkK' | base64 -d > /tmp/fix.py
+          python3 /tmp/fix.py
+      - name: Verify production build
+        run: |
+          npm ci
+          npm run build
+      - name: Commit screen repair
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/start-project-transition-core.js
+          git commit -m 'Restore MacBook display surface' || exit 0
+          git push
