@@ -230,7 +230,11 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
           screenPlane.add(anchor)
           return anchor
         })
-        screenPlane.visible = false
+        const screenTexture = new THREE.TextureLoader().load('/assets/start-project/macbook/home_screen_diff.jpg')
+        screenTexture.colorSpace = THREE.SRGBColorSpace
+        screenTexture.flipY = false
+        screenPlane.material = new THREE.MeshBasicMaterial({ map: screenTexture, color: 0xffffff, toneMapped: false, side: THREE.DoubleSide })
+        screenPlane.visible = true
         lidPivot.rotation.x = CLOSED_ANGLE
         modelLoaded = true
         resolve(true)
