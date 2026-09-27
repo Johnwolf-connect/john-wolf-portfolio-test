@@ -2,6 +2,9 @@ const STYLE_ID = 'start-project-transition-styles'
 const STAGE_ID = 'start-project-transition-stage'
 const VIDEO_URL = '/assets/start-project/environment.mp4'
 const ROCK_URL = '/assets/start-project/black-stone.png'
+const MODEL_URL = '/assets/start-project/macbook/macbook-pro-2020.glb'
+const KEYBOARD_URL = '/assets/start-project/macbook/keyboard_diff.jpg'
+const TOUCHBAR_URL = '/assets/start-project/macbook/touchpad_diff.jpg'
 
 function clamp(value, minimum, maximum) {
   return Math.min(Math.max(value, minimum), maximum)
@@ -426,7 +429,129 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
   let settled = false
   let animationFrame = 0
   let hoverStartedAt = 0
-  const modelReady = Promise.resolve(null)
+  let lidPivot = null
+  let lidOpenProgress = 0
+  let screenCorners = []
+  let modelLoaded = false
+  let modelLoadFailed = false
+  const CLOSED_LID_ANGLE = Math.PI / 2
+  const loader = new GLTFLoader()
+  const textureLoader = new THREE.TextureLoader()
+
+  const modelReady = new Promise((resolve) => {
+    loader.load(
+      MODEL_URL,
+      (gltf) => {
+        const model = gltf.scene
+        const lid = model.getObjectByName('Rectangle004')
+
+        const aluminum = new THREE.MeshStandardMaterial({
+          color: 0x50535a,
+          metalness: 0.86,
+          roughness: 0.3,
+        })
+        const dark = new THREE.MeshStandardMaterial({
+          color: 0x08090b,
+          metalness: 0.18,
+          roughness: 0.48,
+        })
+        const trackpad = new THREE.MeshStandardMaterial({
+          color: 0x666a70,
+          metalness: 0.72,
+          roughness: 0.34,
+        })
+
+        const keyboardTexture = textureLoader.load(KEYBOARD_URL)
+        keyboardTexture.colorSpace = THREE.SRGBColorSpace
+        keyboardTexture.flipY = false
+        const keyboardMaterial = new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          map: keyboardTexture,
+          metalness: 0.05,
+          roughness: 0.52,
+        })
+
+        const touchbarTexture = textureLoader.load(TOUCHBAR_URL)
+        touchbarTexture.colorSpace = THREE.SRGBColorSpace
+        touchbarTexture.flipY = false
+        const touchbarMaterial = new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          map: touchbarTexture,
+          metalness: 0.05,
+          roughness: 0.38,
+        })
+
+        model.traverse((child) => {
+          if (!child.isMesh) return
+          child.castShadow = true
+          child.receiveShadow = true
+          child.frustumCulled = false
+
+          if (child.name === 'Object026') child.material = keyboardMaterial
+          else if (child.name === 'Object027') child.material = touchbarMaterial
+          else if (child.name === 'Object025') child.material = trackpad
+          else if (child.name === 'Rectangle004') child.material = dark
+          else if (child.name === 'Cylinder007' || child.name === 'Object028') child.material = dark
+          else child.material = aluminum
+        })
+
+        if (!lid?.parent) {
+          modelLoadFailed = true
+          console.error('MacBook Pro 2020 lid group was not found.')
+          resolve(null)
+          return
+        }
+
+        const lidParent = lid.parent
+        lidPivot = new THREE.Group()
+        lidPivot.name = 'JohnWolfMacBook2020LidPivot'
+        lidPivot.position.set(0, -114.7, -115.7)
+        lidParent.add(lidPivot)
+        lidParent.updateMatrixWorld(true)
+        lidPivot.updateMatrixWorld(true)
+        lidPivot.attach(lid)
+
+        const screenSpecs = [
+          [-160, 113, -118.55],
+          [160, 113, -118.55],
+          [160, -87, -118.55],
+          [-160, -87, -118.55],
+        ]
+
+        screenCorners = screenSpecs.map(([x, y, z], index) => {
+          const anchor = new THREE.Object3D()
+          anchor.name = `JohnWolfScreenCorner${index + 1}`
+          anchor.position.set(x, y, z)
+          lidParent.add(anchor)
+          lidParent.updateMatrixWorld(true)
+          lidPivot.updateMatrixWorld(true)
+          lidPivot.attach(anchor)
+          return anchor
+        })
+
+        const screenCenterY = (113 + -87) / 2
+        const screenCenterZ = -118.55
+        const modelScale = screenWidth / 320
+        model.scale.setScalar(modelScale)
+        model.position.set(0, -screenCenterY * modelScale, -screenCenterZ * modelScale)
+
+        laptopRoot.add(model)
+        model.updateMatrixWorld(true)
+        laptopRoot.updateMatrixWorld(true)
+
+        lidPivot.rotation.x = CLOSED_LID_ANGLE
+        lidOpenProgress = 0
+        modelLoaded = true
+        resolve(model)
+      },
+      undefined,
+      (error) => {
+        modelLoadFailed = true
+        console.error('MacBook Pro 2020 model could not load.', error)
+        resolve(null)
+      },
+    )
+  })
 
   function resizeRenderer() {
     layout = getSceneLayout(camera, screenWidth)
@@ -435,7 +560,30 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
     renderer.setSize(layout.viewportWidth, layout.viewportHeight, false)
   }
 
-  function projectLivePage() {}
+  function projectLivePage() {
+    if (!livePage || screenCorners.length !== 4) return
+
+    const projected = screenCorners.map((anchor) => {
+      const point = new THREE.Vector3()
+      anchor.getWorldPosition(point)
+      point.project(camera)
+      return [
+        (point.x * 0.5 + 0.5) * layout.viewportWidth,
+        (-point.y * 0.5 + 0.5) * layout.viewportHeight,
+      ]
+    })
+
+    const area = polygonArea(projected)
+    const transform = getProjectiveTransform(
+      livePage.width,
+      livePage.height,
+      projected,
+    )
+    const reveal = clamp((lidOpenProgress - 0.12) / 0.25, 0, 1)
+
+    livePage.screen.style.opacity = area > 1 ? String(reveal) : '0'
+    if (transform) livePage.screen.style.transform = transform
+  }
 
   function setOpeningPose(progress) {
     const firstPhase = clamp(progress / 0.2, 0, 1)
@@ -466,6 +614,15 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
       Math.sin(travelPhase * Math.PI * 2) * 0.055 +
       mix(0, -0.018, travelEase)
 
+    const lidPhase = clamp((progress - 0.1) / 0.62, 0, 1)
+    lidOpenProgress = easeInOutCubic(lidPhase)
+    if (lidPivot) {
+      lidPivot.rotation.x = mix(CLOSED_LID_ANGLE, 0, lidOpenProgress)
+    }
+    if (progress > 0.12 && livePage) {
+      livePage.screen.classList.add('is-framed')
+    }
+
     if (progress > 0.26) stage.classList.add('is-rock-visible')
     if (progress > 0.72) stage.classList.add('is-form-visible')
   }
@@ -487,6 +644,8 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
       -0.018 + drift * 0.009,
     )
 
+    lidOpenProgress = 1
+    if (lidPivot) lidPivot.rotation.x = 0
   }
 
   function renderFrame(timestamp) {
@@ -526,6 +685,12 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
 
     await modelReady
 
+    if (modelLoadFailed || !modelLoaded) {
+      animating = false
+      console.error('Start a Project stopped because the MacBook model is unavailable.')
+      return
+    }
+
     resizeRenderer()
 
     const mobileProjectPage =
@@ -546,7 +711,7 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
     })
 
     stage.scrollTop = 0
-    livePage = null
+    livePage = createLivePageLayer()
     active = true
     settled = false
     stage.classList.remove('is-rock-visible', 'is-form-visible', 'is-settled')
@@ -559,6 +724,8 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
     laptopRoot.position.set(0, 0, 0)
     laptopRoot.rotation.set(0, 0, 0)
     laptopRoot.scale.setScalar(layout.initialScale)
+    lidOpenProgress = 0
+    if (lidPivot) lidPivot.rotation.x = CLOSED_LID_ANGLE
 
     cancelAnimationFrame(animationFrame)
     animationFrame = requestAnimationFrame(renderFrame)
@@ -584,6 +751,7 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
     const startScale = laptopRoot.scale.x
     const startPosition = laptopRoot.position.clone()
     const startRotation = laptopRoot.rotation.clone()
+    const startLidRotation = lidPivot?.rotation.x ?? 0
 
     await animate(1680, (progress) => {
       const eased = easeInOutCubic(progress)
@@ -601,6 +769,11 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
         mix(startRotation.z, 0, eased),
       )
 
+      lidOpenProgress = 1 - eased
+      if (lidPivot) {
+        lidPivot.rotation.x = mix(startLidRotation, CLOSED_LID_ANGLE, eased)
+      }
+
       if (progress > 0.38) stage.classList.remove('is-rock-visible')
       if (progress > 0.88 && livePage) {
         livePage.screen.classList.remove('is-framed')
@@ -610,6 +783,8 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
     laptopRoot.rotation.set(0, 0, 0)
     laptopRoot.position.set(0, 0, 0)
     laptopRoot.scale.setScalar(layout.initialScale)
+    lidOpenProgress = 0
+    if (lidPivot) lidPivot.rotation.x = CLOSED_LID_ANGLE
     projectLivePage()
 
     livePage?.restore()
