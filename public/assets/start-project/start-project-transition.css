@@ -94,7 +94,7 @@
   z-index: 2;
   left: clamp(1rem, 3vw, 4rem);
   bottom: clamp(-2rem, -2vw, -0.5rem);
-  width: min(48vw, 760px);
+  width: min(40vw, 620px);
   opacity: 0;
   transform: translate3d(-7%, 14%, 0) scale(0.9);
   transform-origin: 50% 80%;
