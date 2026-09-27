@@ -53,3 +53,4 @@ s = s.replace(old, new, 1)
 
 p.write_text(s)
 print('Applied M5 hinge/display repair')
+# workflow trigger 2026-09-27
