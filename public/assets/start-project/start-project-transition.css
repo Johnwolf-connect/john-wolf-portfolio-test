@@ -158,9 +158,10 @@
   top: 50%;
   right: clamp(1.5rem, 5vw, 6.5rem);
   width: min(40vw, 620px);
-  max-height: calc(100vh - 7rem);
+  max-height: calc(100vh - 2.5rem);
   overflow: auto;
   padding: clamp(1.5rem, 2.5vw, 2.7rem);
+  padding-bottom: clamp(2.25rem, 3vw, 3.5rem);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 28px;
   background:
