@@ -507,7 +507,32 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
           transition surface used by the existing camera choreography, then
           center that LCD around the transition origin.
         */
-        model.scale.setScalar(9.48)
+        model.scale.setScalar(1)
+model.updateMatrixWorld(true)
+
+let importedScreenWidth = 0
+
+if (screenSurface?.geometry) {
+  if (!screenSurface.geometry.boundingBox) {
+    screenSurface.geometry.computeBoundingBox()
+  }
+
+  const screenBounds = screenSurface.geometry.boundingBox
+  const screenWorldScale = new THREE.Vector3()
+  screenSurface.getWorldScale(screenWorldScale)
+
+  importedScreenWidth =
+    (screenBounds.max.x - screenBounds.min.x) *
+    Math.abs(screenWorldScale.x)
+}
+
+const normalizedModelScale =
+  importedScreenWidth > 0.0001
+    ? screenWidth / importedScreenWidth
+    : 948
+
+model.scale.setScalar(normalizedModelScale)
+model.updateMatrixWorld(true)
         model.position.set(0, -101.7, 152)
 
         laptopRoot.add(model)
