@@ -1,0 +1,123 @@
+asset={'extras': {'author': 'akshatmittal (https://sketchfab.com/akshatmittal)', 'license': 'CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)', 'source': 'https://sketchfab.com/3d-models/apple-macbook-air-15-space-gray-2023-e8d82e341c794141a2561c2c9d01d79e', 'title': 'Apple Macbook Air 15 (Space Gray) 2023'}, 'generator': 'Sketchfab-15.26.0', 'version': '2.0'}
+scene=0 scenes=[{'name': 'Sketchfab_Scene', 'nodes': [0]}]
+NODES:
+0: name=Sketchfab_model mesh=None children=[1] t=None r=None s=None matrix=[1.0, 0.0, 0.0, 0.0, 0.0, 2.220446049250313e-16, -1.0, 0.0, 0.0, 1.0, 2.220446049250313e-16, 0.0, 0.0, 0.0, 0.0, 1.0]
+1: name=USDRoot mesh=None children=[2] t=None r=None s=None matrix=[0.009999999776482582, 0.0, 0.0, 0.0, 0.0, 2.2204459996194763e-18, 0.009999999776482582, 0.0, 0.0, -0.009999999776482582, 2.2204459996194763e-18, 0.0, 0.0, 0.0, 0.0, 1.0]
+2: name=tracking_node_placeholder mesh=None children=[3] t=None r=None s=None matrix=None
+3: name=qVpvpTLUaLAprjQ mesh=None children=[4] t=None r=None s=None matrix=None
+4: name=lEjpvGdexfsltWD mesh=None children=[5] t=None r=None s=None matrix=None
+5: name=VqmxCoxvZXhlmUu mesh=None children=[6, 22, 68] t=None r=None s=None matrix=None
+6: name=GyAtsALzJhKEkPM mesh=None children=[7] t=None r=None s=None matrix=None
+7: name=DqPpXPLTtdJsdCX mesh=None children=[8, 9, 10, 11, 12, 13, 14, 15, 16, 17] t=None r=None s=None matrix=None
+8: name=xVreGKoBGSZYMij mesh=0 children=None t=None r=None s=None matrix=None
+9: name=CTBERffHyoCSDBm_0 mesh=1 children=None t=None r=None s=None matrix=None
+10: name=hczGzWOWpedUDYd_0 mesh=2 children=None t=None r=None s=None matrix=None
+11: name=biHEvGDNnTqamRb mesh=3 children=None t=None r=None s=None matrix=None
+12: name=TyOrApjEOLhYCaF mesh=4 children=None t=None r=None s=None matrix=None
+13: name=vrIckaCELZpnnNK mesh=5 children=None t=None r=None s=None matrix=None
+14: name=SadnAkehSlxIwKv mesh=6 children=None t=None r=None s=None matrix=None
+15: name=OrhpMXCxeprcNok mesh=7 children=None t=None r=None s=None matrix=None
+16: name=aLWGnOLpsFWVSfy mesh=8 children=None t=None r=None s=None matrix=None
+17: name=uYMZUoIadmQvLUC mesh=None children=[18, 19, 20, 21] t=None r=None s=None matrix=None
+18: name=WDUVUVPpNjdIPkb mesh=9 children=None t=None r=None s=None matrix=None
+19: name=NqUinIWcwSlXpvt mesh=10 children=None t=None r=None s=None matrix=None
+20: name=MaufYfIBnxcfRgH mesh=11 children=None t=None r=None s=None matrix=None
+21: name=aIqeGXayDxWnOWQ mesh=12 children=None t=None r=None s=None matrix=None
+22: name=VZljEqnVbZkyoqw mesh=None children=[23, 24, 25, 26, 27, 28, 29, 30, 43, 64] t=None r=None s=None matrix=None
+23: name=HrtjMXqDCcINmDE_0 mesh=13 children=None t=None r=None s=None matrix=None
+24: name=zWqVyCKpTAuZNiu_0 mesh=14 children=None t=None r=None s=None matrix=None
+25: name=MYVKQTLmUkzzlBj_0 mesh=15 children=None t=None r=None s=None matrix=None
+26: name=qEJjkxdFZFWJWzR_0 mesh=16 children=None t=None r=None s=None matrix=None
+27: name=lvlCIzdfTmsrnsM mesh=17 children=None t=None r=None s=None matrix=None
+28: name=eeWSraIVipLsSmX_0 mesh=18 children=None t=None r=None s=None matrix=None
+29: name=PgbYkhvRdcmMeGL mesh=19 children=None t=None r=None s=None matrix=None
+30: name=zTlgrtHsPpAluKp mesh=None children=[31, 32, 33, 34, 35, 36, 37, 38, 39] t=None r=None s=None matrix=None
+31: name=rktWdhtZkCSmqne mesh=20 children=None t=None r=None s=None matrix=None
+32: name=hztTkkTJBJTZDmk mesh=21 children=None t=None r=None s=None matrix=None
+33: name=bHBjPHbrqJmhyoR mesh=22 children=None t=None r=None s=None matrix=None
+34: name=HHcJitDCPTdgnFk mesh=23 children=None t=None r=None s=None matrix=None
+35: name=DRGkWmkJlgmNDJU mesh=24 children=None t=None r=None s=None matrix=None
+36: name=KMwpdMtieDqmHVU mesh=25 children=None t=None r=None s=None matrix=None
+37: name=KgPDMIRPrxAynTV mesh=26 children=None t=None r=None s=None matrix=None
+38: name=XwGJfoaIrduFPcU mesh=27 children=None t=None r=None s=None matrix=None
+39: name=lDiPoXVAcNFTxPy mesh=None children=[40, 41, 42] t=None r=None s=None matrix=None
+40: name=ACMWKGtOCqXifQY mesh=28 children=None t=None r=None s=None matrix=None
+41: name=BkHyotPbPWzwAAj mesh=29 children=None t=None r=None s=None matrix=None
+42: name=bkcxDtALZjuqGGQ mesh=30 children=None t=None r=None s=None matrix=None
+43: name=MrIPltgekmjUhbX mesh=None children=[44, 49, 56] t=None r=None s=None matrix=None
+44: name=MQPmeFglygqGRpu mesh=None children=[45, 46, 47] t=None r=None s=None matrix=None
+45: name=ebZHPVwKTmqvgbU mesh=31 children=None t=None r=None s=None matrix=None
+46: name=uSnVzUkbvcGaVtm mesh=32 children=None t=None r=None s=None matrix=None
+47: name=dzlWpOlqqqChxvv mesh=None children=[48] t=None r=None s=None matrix=None
+48: name=znOBoeqnOAcWvld mesh=33 children=None t=None r=None s=None matrix=None
+49: name=FvVTkmPpAqOxMDM mesh=None children=[50, 53] t=None r=None s=None matrix=None
+50: name=wjxvWGMeASuERrC mesh=None children=[51, 52] t=None r=None s=None matrix=None
+51: name=tIZmzvOOHrlOFci mesh=34 children=None t=None r=None s=None matrix=None
+52: name=UmfOhraHkqkMHJr mesh=35 children=None t=None r=None s=None matrix=None
+53: name=JTYuBfzSNlKSHgL mesh=None children=[54, 55] t=None r=None s=None matrix=None
+54: name=roXkINNmErodbSy mesh=36 children=None t=None r=None s=None matrix=None
+55: name=wWWhLQmmNVhThGV mesh=37 children=None t=None r=None s=None matrix=None
+56: name=fWckPDAgjgQOoSw mesh=None children=[57, 58, 59, 60, 61, 62, 63] t=None r=None s=None matrix=None
+57: name=JoRHkRchuIHZFdI mesh=38 children=None t=None r=None s=None matrix=None
+58: name=qJLFXXZhlqhKvcM mesh=39 children=None t=None r=None s=None matrix=None
+59: name=thJvyyEdPZIkQGr mesh=40 children=None t=None r=None s=None matrix=None
+60: name=juMIjHdkYweLlGP mesh=41 children=None t=None r=None s=None matrix=None
+61: name=zNYAavJLMZZchIX mesh=42 children=None t=None r=None s=None matrix=None
+62: name=bzbXKgxvWZbXAqu mesh=43 children=None t=None r=None s=None matrix=None
+63: name=guzkNjLPdYYIFbm mesh=44 children=None t=None r=None s=None matrix=None
+64: name=DgUzUGwxDgpAAYu mesh=None children=[65, 66, 67] t=None r=None s=None matrix=None
+65: name=CkZgGMshUOhytMM mesh=45 children=None t=None r=None s=None matrix=None
+66: name=oiLbjgjnUUhPosp mesh=46 children=None t=None r=None s=None matrix=None
+67: name=nDWhlgWONddUcnN mesh=47 children=None t=None r=None s=None matrix=None
+68: name=nCIBwHQZVldyctK mesh=None children=[69] t=None r=None s=None matrix=None
+69: name=VAcTKRVsYcEMWxB mesh=48 children=None t=None r=None s=None matrix=None
+MESH PRIMITIVE POSITION ACCESSOR BOUNDS:
+mesh 0 xVreGKoBGSZYMij prim 0: accessor=0 min=[-13.502592086791992, -0.38118958473205566, -12.094500541687012] max=[13.502640724182129, -0.07231083512306213, -11.523030281066895] count=42
+mesh 1 CTBERffHyoCSDBm_0 prim 0: accessor=5 min=[-11.985848426818848, -0.5811804533004761, -12.094317436218262] max=[11.985848426818848, -0.07707211375236511, -11.427124977111816] count=165
+mesh 2 hczGzWOWpedUDYd_0 prim 0: accessor=11 min=[-17.03484344482422, -0.7336699366569519, -20.339570999145508] max=[17.03484344482422, 21.635847091674805, -11.419075012207031] count=1928
+mesh 3 biHEvGDNnTqamRb prim 0: accessor=17 min=[-16.878700256347656, 0.6949628591537476, -19.975975036621094] max=[16.87881851196289, 21.499666213989258, -12.373329162597656] count=307
+mesh 4 TyOrApjEOLhYCaF prim 0: accessor=21 min=[-16.85097312927246, -0.35542404651641846, -12.373798370361328] max=[16.85097312927246, 0.7046159505844116, -11.96923828125] count=360
+mesh 5 vrIckaCELZpnnNK prim 0: accessor=25 min=[-17.000389099121094, -0.6834128499031067, -20.295616149902344] max=[16.98076629638672, 21.567615509033203, -11.946462631225586] count=134
+mesh 6 SadnAkehSlxIwKv prim 0: accessor=29 min=[-16.347211837768555, 1.1705951690673828, -19.792726516723633] max=[16.34724998474121, 20.99820899963379, -12.547139167785645] count=87
+mesh 7 OrhpMXCxeprcNok prim 0: accessor=33 min=[-1.8938071727752686, 8.574746131896973, -17.222871780395508] max=[1.91087806224823, 12.919804573059082, -15.63506031036377] count=176
+mesh 8 aLWGnOLpsFWVSfy prim 0: accessor=37 min=[-16.955875396728516, -0.5722941756248474, -20.01630401611328] max=[16.955875396728516, 21.57686424255371, -11.627963066101074] count=1754
+mesh 9 WDUVUVPpNjdIPkb prim 0: accessor=41 min=[-0.037722986191511154, 20.89173126220703, -19.885669708251953] max=[0.03784210979938507, 20.962535858154297, -19.85899543762207] count=49
+mesh 10 NqUinIWcwSlXpvt prim 0: accessor=45 min=[-0.0868413969874382, 20.849210739135742, -19.892780303955078] max=[0.08695989102125168, 21.012035369873047, -19.833362579345703] count=100
+mesh 11 MaufYfIBnxcfRgH prim 0: accessor=49 min=[-0.11235717684030533, 20.855308532714844, -19.81757354736328] max=[0.11247546225786209, 21.066211700439453, -19.74050521850586] count=37
+mesh 12 aIqeGXayDxWnOWQ prim 0: accessor=53 min=[-0.11413580924272537, 20.821208953857422, -19.910865783691406] max=[0.11393789201974869, 21.065654754638672, -19.74043846130371] count=122
+mesh 13 HrtjMXqDCcINmDE_0 prim 0: accessor=57 min=[-16.171178817749023, -0.7383880019187927, -11.036334991455078] max=[16.17135238647461, -0.6637777090072632, 11.036759376525879] count=1524
+mesh 14 zWqVyCKpTAuZNiu_0 prim 0: accessor=66 min=[-17.036623001098633, -0.8424165844917297, -11.901884078979492] max=[17.0366153717041, 0.0001916174660436809, 11.902383804321289] count=5612
+mesh 15 MYVKQTLmUkzzlBj_0 prim 0: accessor=74 min=[-15.464123725891113, -0.9364796876907349, -10.332764625549316] max=[15.464016914367676, -0.7925362586975098, 10.333223342895508] count=484
+mesh 16 qEJjkxdFZFWJWzR_0 prim 0: accessor=78 min=[-15.466922760009766, -0.8424165844917297, -10.333307266235352] max=[15.466922760009766, -0.7925105094909668, 10.338357925415039] count=240
+mesh 17 lvlCIzdfTmsrnsM prim 0: accessor=83 min=[-13.589542388916016, -0.6683874130249023, -11.816356658935547] max=[13.590495109558105, -0.04975340887904167, -11.16645622253418] count=3308
+mesh 18 eeWSraIVipLsSmX_0 prim 0: accessor=87 min=[-16.78763771057129, -0.7068508863449097, -11.65229320526123] max=[16.78732681274414, -0.653449535369873, 11.65200424194336] count=736
+mesh 19 PgbYkhvRdcmMeGL prim 0: accessor=93 min=[-13.772198677062988, -0.6685477495193481, -11.566715240478516] max=[13.772197723388672, -0.06971342861652374, 1.7252501249313354] count=1221
+mesh 20 rktWdhtZkCSmqne prim 0: accessor=97 min=[-13.399761199951172, 0.022105561569333076, -8.999430656433105] max=[13.374588012695312, 0.022105680778622627, 1.2585029602050781] count=8889
+mesh 21 hztTkkTJBJTZDmk prim 0: accessor=101 min=[-10.135488510131836, -0.006007776129990816, -5.08342170715332] max=[7.2752838134765625, -0.006007776129990816, -0.977574348449707] count=1702
+mesh 22 bHBjPHbrqJmhyoR prim 0: accessor=105 min=[-11.025155067443848, -0.007072714157402515, -7.233534812927246] max=[11.013988494873047, 0.0032883845269680023, -0.6089754104614258] count=2829
+mesh 23 HHcJitDCPTdgnFk prim 0: accessor=109 min=[-11.761486053466797, -0.13579829037189484, -7.5284833908081055] max=[11.761127471923828, 0.010022863745689392, -0.36469775438308716] count=15120
+mesh 24 DRGkWmkJlgmNDJU prim 0: accessor=115 min=[-13.663779258728027, -0.13557866215705872, -9.383159637451172] max=[13.663779258728027, 0.010130688548088074, 1.4895081520080566] count=8472
+mesh 25 KMwpdMtieDqmHVU prim 0: accessor=121 min=[-3.9766604900360107, -0.014497444033622742, -2.5795459747314453] max=[2.074578046798706, 0.010079577565193176, -2.485557794570923] count=216
+mesh 26 KgPDMIRPrxAynTV prim 0: accessor=127 min=[-13.99015998840332, -0.09266743808984756, -9.708956718444824] max=[13.987771987915039, 0.0001916174660436809, 1.8161942958831787] count=5025
+mesh 27 XwGJfoaIrduFPcU prim 0: accessor=137 min=[-13.704123497009277, -0.25689417123794556, -9.423391342163086] max=[13.704122543334961, -0.09093871712684631, 1.5298681259155273] count=8824
+mesh 28 ACMWKGtOCqXifQY prim 0: accessor=143 min=[12.01224422454834, -0.1355784684419632, -9.382502555847168] max=[13.663406372070312, -0.009810686111450195, -7.7797746658325195] count=316
+mesh 29 BkHyotPbPWzwAAj prim 0: accessor=149 min=[12.344245910644531, -0.019818082451820374, -9.075150489807129] max=[13.331328392028809, -0.009831905364990234, -8.087172508239746] count=96
+mesh 30 bkcxDtALZjuqGGQ prim 0: accessor=153 min=[12.36509895324707, -0.019818082451820374, -9.05422592163086] max=[13.310405731201172, -0.01981261372566223, -8.108043670654297] count=33
+mesh 31 ebZHPVwKTmqvgbU prim 0: accessor=159 min=[-16.9915771484375, -0.3326523005962372, -9.134970664978027] max=[-16.9265079498291, -0.2128922939300537, -8.028446197509766] count=297
+mesh 32 uSnVzUkbvcGaVtm prim 0: accessor=163 min=[-16.99156951904297, -0.30136004090309143, -8.991164207458496] max=[-16.979719161987305, -0.24418559670448303, -8.172257423400879] count=65
+mesh 33 znOBoeqnOAcWvld prim 0: accessor=167 min=[-16.98334503173828, -0.3336350619792938, -9.135900497436523] max=[-16.926427841186523, -0.21190950274467468, -8.027515411376953] count=62
+mesh 34 tIZmzvOOHrlOFci prim 0: accessor=172 min=[-16.84691047668457, -0.3326268792152405, -7.062897205352783] max=[-16.336956024169922, -0.21299360692501068, -6.392518043518066] count=790
+mesh 35 UmfOhraHkqkMHJr prim 0: accessor=176 min=[-16.919387817382812, -0.41173097491264343, -7.1832661628723145] max=[-16.33625030517578, -0.135499507188797, -6.272459506988525] count=836
+mesh 36 roXkINNmErodbSy prim 0: accessor=180 min=[-16.846912384033203, -0.3326268792152405, -5.5724711418151855] max=[-16.336957931518555, -0.21299360692501068, -4.902091979980469] count=790
+mesh 37 wWWhLQmmNVhThGV prim 0: accessor=184 min=[-16.919387817382812, -0.41173094511032104, -5.692684173583984] max=[-16.33625030517578, -0.1354994922876358, -4.7818779945373535] count=836
+mesh 38 JoRHkRchuIHZFdI prim 0: accessor=188 min=[15.823150634765625, -0.4320211410522461, -9.70632553100586] max=[16.947900772094727, -0.1675502061843872, -9.31276798248291] count=230
+mesh 39 qJLFXXZhlqhKvcM prim 0: accessor=193 min=[15.660006523132324, -0.48239123821258545, -9.687637329101562] max=[17.037837982177734, -0.1265868991613388, -9.3314847946167] count=346
+mesh 40 thJvyyEdPZIkQGr prim 0: accessor=198 min=[15.825347900390625, -0.4320206046104431, -9.705867767333984] max=[16.945682525634766, -0.16755062341690063, -9.313224792480469] count=230
+mesh 41 juMIjHdkYweLlGP prim 0: accessor=202 min=[15.660006523132324, -0.48278558254241943, -9.688159942626953] max=[17.037277221679688, -0.1260586977005005, -9.330963134765625] count=346
+mesh 42 zNYAavJLMZZchIX prim 0: accessor=206 min=[16.991043090820312, -0.498721718788147, -9.704228401184082] max=[17.037351608276367, -0.1100466176867485, -9.314901351928711] count=66
+mesh 43 bzbXKgxvWZbXAqu prim 0: accessor=210 min=[16.818578720092773, -0.5034852027893066, -9.708823204040527] max=[17.0366153717041, -0.10546743869781494, -9.310307502746582] count=68
+mesh 44 guzkNjLPdYYIFbm prim 0: accessor=215 min=[15.639188766479492, -0.5262520909309387, -9.722968101501465] max=[17.037351608276367, -0.0818134993314743, -9.276126861572266] count=243
+mesh 45 CkZgGMshUOhytMM prim 0: accessor=219 min=[-7.433403491973877, -0.019763246178627014, 2.0924477577209473] max=[7.432118892669678, -0.009833142161369324, 11.37072467803955] count=108
+mesh 46 oiLbjgjnUUhPosp prim 0: accessor=226 min=[-7.465307712554932, -0.27099570631980896, 2.060520648956299] max=[7.464023113250732, -0.019763246178627014, 11.402650833129883] count=416
+mesh 47 nDWhlgWONddUcnN prim 0: accessor=233 min=[-7.461426258087158, -0.2216695100069046, 2.064401388168335] max=[7.460141181945801, -0.2216695100069046, 11.398770332336426] count=208
+mesh 48 VAcTKRVsYcEMWxB prim 0: accessor=237 min=[-17.014175415039062, -0.6168484687805176, -11.806901931762695] max=[16.913896560668945, -0.04304221272468567, 11.864645957946777] count=674
