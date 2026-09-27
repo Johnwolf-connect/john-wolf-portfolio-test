@@ -89,19 +89,28 @@ function createStage() {
 function clonePortfolioLayer() {
   const source = document.getElementById('root') || document.body.firstElementChild
   if (!source) return null
+  const snapshotWidth = window.innerWidth
+  const snapshotHeight = window.innerHeight
   const screen = document.createElement('div')
   screen.className = 'spt-live-screen'
   screen.setAttribute('aria-hidden', 'true')
+  screen.style.width = `${snapshotWidth}px`
+  screen.style.height = `${snapshotHeight}px`
   const scroll = document.createElement('div')
   scroll.className = 'spt-live-scroll'
+  scroll.style.width = `${snapshotWidth}px`
+  scroll.style.minWidth = `${snapshotWidth}px`
+  scroll.style.height = `${snapshotHeight}px`
   const clone = source.cloneNode(true)
+  clone.style.width = `${snapshotWidth}px`
+  clone.style.minWidth = `${snapshotWidth}px`
   clone.querySelectorAll('[id]').forEach((node) => node.removeAttribute('id'))
   clone.querySelectorAll('video, audio').forEach((node) => { node.autoplay = false; node.removeAttribute('autoplay') })
   scroll.style.top = `${-window.scrollY}px`
   scroll.append(clone)
   screen.append(scroll)
   document.documentElement.append(screen)
-  return { screen, width: window.innerWidth, height: window.innerHeight, destroy: () => screen.remove() }
+  return { screen, width: snapshotWidth, height: snapshotHeight, destroy: () => screen.remove() }
 }
 
 function getLayout(camera, screenWidth) {
@@ -210,8 +219,6 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
         model.updateMatrixWorld(true)
         lidPivot.updateMatrixWorld(true)
         lidPivot.attach(lid)
-        // The display glass/screen is a separate mesh in the M5 asset. It must share
-        // the exact same hinge pivot as the lid shell or the laptop separates.
         lidPivot.attach(screenPlane)
 
         const positions = screenPlane.geometry.attributes.position
@@ -255,8 +262,6 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
     })
     const transform = getProjectiveTransform(livePage.width, livePage.height, points)
     if (transform) livePage.screen.style.transform = transform
-    // The HTML screen projection has no WebGL occlusion. Keep it hidden while
-    // the machine is rotating so it can never appear mirrored through the rear lid.
     livePage.screen.style.opacity = String(clamp((lidOpenProgress - 0.12) / 0.25, 0, 1) * screenReveal)
   }
 
