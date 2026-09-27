@@ -163,7 +163,8 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
   let modelLoaded = false
   let modelFailed = false
   let hoverStartedAt = 0
-  const CLOSED_ANGLE = 1.93
+  let screenReveal = 0
+  const CLOSED_ANGLE = Math.PI / 2
 
   function resize() {
     layout = getLayout(camera, screenWidth)
@@ -200,7 +201,7 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
         model.updateMatrixWorld(true)
 
         const lidBounds = new THREE.Box3().setFromObject(lid)
-        const hingeWorld = new THREE.Vector3((lidBounds.min.x + lidBounds.max.x) / 2, lidBounds.max.y, lidBounds.max.z)
+        const hingeWorld = new THREE.Vector3((lidBounds.min.x + lidBounds.max.x) / 2, lidBounds.min.y, (lidBounds.min.z + lidBounds.max.z) / 2)
         const hingeLocal = model.worldToLocal(hingeWorld.clone())
         lidPivot = new THREE.Group()
         lidPivot.name = 'JohnWolfMacBookM5LidPivot'
@@ -209,6 +210,9 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
         model.updateMatrixWorld(true)
         lidPivot.updateMatrixWorld(true)
         lidPivot.attach(lid)
+        // The display glass/screen is a separate mesh in the M5 asset. It must share
+        // the exact same hinge pivot as the lid shell or the laptop separates.
+        lidPivot.attach(screenPlane)
 
         const positions = screenPlane.geometry.attributes.position
         const vertices = []
@@ -251,7 +255,9 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
     })
     const transform = getProjectiveTransform(livePage.width, livePage.height, points)
     if (transform) livePage.screen.style.transform = transform
-    livePage.screen.style.opacity = String(clamp((lidOpenProgress - 0.12) / 0.25, 0, 1))
+    // The HTML screen projection has no WebGL occlusion. Keep it hidden while
+    // the machine is rotating so it can never appear mirrored through the rear lid.
+    livePage.screen.style.opacity = String(clamp((lidOpenProgress - 0.12) / 0.25, 0, 1) * screenReveal)
   }
 
   function setPose(progress) {
@@ -260,6 +266,7 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
     laptopRoot.position.set(layout.finalX * travel, layout.finalY * travel + Math.sin(travel * Math.PI) * layout.vertical * 0.055, Math.sin(travel * Math.PI) * -42)
     laptopRoot.rotation.set(Math.sin(travel * Math.PI) * -0.22 - 0.075 * travel, travel * Math.PI * 2 - 0.2 * travel, Math.sin(travel * Math.PI * 2) * 0.055 - 0.018 * travel)
     lidOpenProgress = ease(clamp((progress - 0.1) / 0.62, 0, 1))
+    screenReveal = ease(clamp((progress - 0.82) / 0.12, 0, 1))
     if (lidPivot) lidPivot.rotation.x = mix(CLOSED_ANGLE, 0, lidOpenProgress)
     if (progress > 0.12) livePage?.screen.classList.add('is-framed')
     if (progress > 0.26) stage.classList.add('is-rock-visible')
@@ -274,6 +281,7 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
       laptopRoot.position.set(layout.finalX + Math.sin(elapsed * 0.58) * 2.6, layout.finalY + Math.sin(elapsed * 1.15) * 5.2, 0)
       laptopRoot.rotation.set(-0.075, Math.PI * 2 - 0.2, -0.018)
       lidOpenProgress = 1
+      screenReveal = 1
       if (lidPivot) lidPivot.rotation.x = 0
     }
     projectScreen()
@@ -321,6 +329,7 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
     laptopRoot.rotation.set(0, 0, 0)
     laptopRoot.scale.setScalar(layout.initialScale)
     lidOpenProgress = 0
+    screenReveal = 0
     if (lidPivot) lidPivot.rotation.x = CLOSED_ANGLE
     await animate(2860, setPose)
     settled = true
@@ -343,6 +352,7 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
         laptopRoot.position.lerpVectors(startPosition, new THREE.Vector3(), t)
         laptopRoot.rotation.set(mix(startRotation.x, 0, t), mix(startRotation.y, Math.PI * 4, t), mix(startRotation.z, 0, t))
         lidOpenProgress = 1 - t
+        screenReveal = 1 - t
         if (lidPivot) lidPivot.rotation.x = mix(0, CLOSED_ANGLE, t)
       })
     }
