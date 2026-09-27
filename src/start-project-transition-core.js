@@ -269,7 +269,7 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
     const travel = ease(clamp((progress - 0.08) / 0.92, 0, 1))
     laptopRoot.scale.setScalar(mix(layout.initialScale, layout.finalScale, travel))
     laptopRoot.position.set(layout.finalX * travel, layout.finalY * travel + Math.sin(travel * Math.PI) * layout.vertical * 0.055, Math.sin(travel * Math.PI) * -42)
-    laptopRoot.rotation.set(Math.sin(travel * Math.PI) * -0.22 - 0.13 * travel, travel * Math.PI * 2 - 0.2 * travel, Math.sin(travel * Math.PI * 2) * 0.055 - 0.018 * travel)
+    laptopRoot.rotation.set(Math.sin(travel * Math.PI) * -0.22 + 0.10 * travel, travel * Math.PI * 2 - 0.2 * travel, Math.sin(travel * Math.PI * 2) * 0.055 - 0.018 * travel)
     lidOpenProgress = ease(clamp((progress - 0.1) / 0.62, 0, 1))
     screenReveal = ease(clamp((progress - 0.82) / 0.12, 0, 1))
     if (lidPivot) lidPivot.rotation.x = mix(CLOSED_ANGLE, 0, lidOpenProgress)
@@ -284,7 +284,7 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
       const elapsed = (timestamp - hoverStartedAt) / 1000
       laptopRoot.scale.setScalar(layout.finalScale)
       laptopRoot.position.set(layout.finalX + Math.sin(elapsed * 0.58) * 2.6, layout.finalY + Math.sin(elapsed * 1.15) * 5.2, 0)
-      laptopRoot.rotation.set(-0.13, Math.PI * 2 - 0.2, -0.018)
+      laptopRoot.rotation.set(0.10, Math.PI * 2 - 0.2, -0.018)
       lidOpenProgress = 1
       screenReveal = 1
       if (lidPivot) lidPivot.rotation.x = 0
