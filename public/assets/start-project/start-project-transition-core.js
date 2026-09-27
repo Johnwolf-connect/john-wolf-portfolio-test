@@ -508,34 +508,48 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
           center that LCD around the transition origin.
         */
         model.scale.setScalar(1)
-model.updateMatrixWorld(true)
-
-let importedScreenWidth = 0
-
-if (screenSurface?.geometry) {
-  if (!screenSurface.geometry.boundingBox) {
-    screenSurface.geometry.computeBoundingBox()
-  }
-
-  const screenBounds = screenSurface.geometry.boundingBox
-  const screenWorldScale = new THREE.Vector3()
-  screenSurface.getWorldScale(screenWorldScale)
-
-  importedScreenWidth =
-    (screenBounds.max.x - screenBounds.min.x) *
-    Math.abs(screenWorldScale.x)
-}
-
-const normalizedModelScale =
-  importedScreenWidth > 0.0001
-    ? screenWidth / importedScreenWidth
-    : 948
-
-model.scale.setScalar(normalizedModelScale)
-model.updateMatrixWorld(true)
-        model.position.set(0, -101.7, 152)
-
+        model.position.set(0, 0, 0)
         laptopRoot.add(model)
+
+        if (lidPivot) {
+          lidPivot.rotation.x = 0
+        }
+
+        model.updateMatrixWorld(true)
+        laptopRoot.updateMatrixWorld(true)
+
+        const rawBounds = new THREE.Box3().setFromObject(model)
+        const rawSize = new THREE.Vector3()
+        rawBounds.getSize(rawSize)
+
+        const fittedScale =
+          rawSize.x > 0.0001
+            ? 336 / rawSize.x
+            : 948
+
+        model.scale.setScalar(fittedScale)
+        model.updateMatrixWorld(true)
+        laptopRoot.updateMatrixWorld(true)
+
+        const fittedBounds = new THREE.Box3().setFromObject(model)
+        const fittedCenter = new THREE.Vector3()
+        fittedBounds.getCenter(fittedCenter)
+
+        model.position.x -= fittedCenter.x
+        model.position.y -= fittedCenter.y
+        model.position.z -= fittedCenter.z
+        model.updateMatrixWorld(true)
+
+        if (lidPivot) {
+          lidPivot.rotation.x = CLOSED_LID_ANGLE
+          lidOpenProgress = 0
+        }
+
+        model.traverse((child) => {
+          if (child.isMesh) {
+            child.frustumCulled = false
+          }
+        })
         modelLoaded = true
         resolve(model)
       },
