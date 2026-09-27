@@ -1,0 +1,118 @@
+name: Fit MacBook to Real Bounds
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/fit-macbook-real-bounds.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fit imported MacBook from actual geometry bounds
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('public/assets/start-project/start-project-transition-core.js')
+          s=p.read_text()
+          old="""        model.scale.setScalar(1)
+model.updateMatrixWorld(true)
+
+let importedScreenWidth = 0
+
+if (screenSurface?.geometry) {
+  if (!screenSurface.geometry.boundingBox) {
+    screenSurface.geometry.computeBoundingBox()
+  }
+
+  const screenBounds = screenSurface.geometry.boundingBox
+  const screenWorldScale = new THREE.Vector3()
+  screenSurface.getWorldScale(screenWorldScale)
+
+  importedScreenWidth =
+    (screenBounds.max.x - screenBounds.min.x) *
+    Math.abs(screenWorldScale.x)
+}
+
+const normalizedModelScale =
+  importedScreenWidth > 0.0001
+    ? screenWidth / importedScreenWidth
+    : 948
+
+model.scale.setScalar(normalizedModelScale)
+model.updateMatrixWorld(true)
+        model.position.set(0, -101.7, 152)
+
+        laptopRoot.add(model)
+"""
+          new="""        /*
+          Fit the replacement MacBook from its real imported geometry.
+          The Sketchfab file carries a 0.01 scale inside the hierarchy, so
+          guessing an outer scale/offset can make the whole machine vanish.
+          Measure the complete imported body instead, fit it to the same
+          transition footprint, and center the real geometry at the animation
+          origin. This leaves the rock, form, camera choreography, and page
+          projection untouched.
+        */
+        model.scale.setScalar(1)
+        model.position.set(0, 0, 0)
+        laptopRoot.add(model)
+
+        if (lidPivot) lidPivot.rotation.x = 0
+        model.updateMatrixWorld(true)
+        laptopRoot.updateMatrixWorld(true)
+
+        const rawBounds = new THREE.Box3().setFromObject(model)
+        const rawSize = new THREE.Vector3()
+        rawBounds.getSize(rawSize)
+
+        const targetModelWidth = 336
+        const fittedScale =
+          rawSize.x > 0.0001
+            ? targetModelWidth / rawSize.x
+            : 948
+
+        model.scale.setScalar(fittedScale)
+        model.updateMatrixWorld(true)
+        laptopRoot.updateMatrixWorld(true)
+
+        const fittedBounds = new THREE.Box3().setFromObject(model)
+        const fittedCenter = new THREE.Vector3()
+        fittedBounds.getCenter(fittedCenter)
+
+        model.position.x -= fittedCenter.x
+        model.position.y -= fittedCenter.y
+        model.position.z -= fittedCenter.z
+        model.updateMatrixWorld(true)
+
+        if (lidPivot) {
+          lidPivot.rotation.x = CLOSED_LID_ANGLE
+          lidOpenProgress = 0
+        }
+
+        model.traverse((child) => {
+          if (child.isMesh) child.frustumCulled = false
+        })
+"""
+          if old not in s:
+              raise SystemExit('Expected scale block not found; refusing unsafe edit')
+          p.write_text(s.replace(old,new,1))
+          PY
+      - name: Verify JavaScript syntax
+        run: node --check public/assets/start-project/start-project-transition-core.js
+      - name: Verify production build
+        run: |
+          npm install
+          npm run build
+      - name: Commit fitted MacBook
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/assets/start-project/start-project-transition-core.js
+          git commit -m 'Fit replacement MacBook from real geometry bounds' || exit 0
+          git push
