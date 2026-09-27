@@ -264,7 +264,6 @@
   padding: 0.85rem 0.9rem;
 }
 
-
 .spt-form select {
   appearance: none;
   -webkit-appearance: none;
@@ -414,6 +413,10 @@
   color: rgba(255, 222, 227, 0.74);
   font-size: 0.74rem;
   line-height: 1.45;
+}
+
+.spt-form-status:empty {
+  display: none;
 }
 
 .spt-close {
@@ -659,7 +662,6 @@
   }
 }
 
-
 @media (max-width: 560px) {
   .spt-form {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -716,7 +718,6 @@
   }
 }
 
-
 @media (prefers-reduced-motion: reduce) {
   .spt-rock-scene,
   .spt-underlight,
@@ -726,4 +727,3 @@
     animation: none !important;
   }
 }
-
