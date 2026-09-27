@@ -1,0 +1,43 @@
+name: Fix MacBook Facing
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-macbook-facing.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Correct MacBook front-facing orientation
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/start-project-transition-core.js')
+          s=p.read_text()
+          old="laptopRoot.rotation.set(Math.sin(travel * Math.PI) * -0.22 - 0.075 * travel, travel * Math.PI * 2 - 0.2 * travel, Math.sin(travel * Math.PI * 2) * 0.055 - 0.018 * travel)"
+          new="laptopRoot.rotation.set(Math.sin(travel * Math.PI) * -0.22 - 0.075 * travel, Math.PI + travel * Math.PI * 2 - 0.2 * travel, Math.sin(travel * Math.PI * 2) * 0.055 - 0.018 * travel)"
+          old2="laptopRoot.rotation.set(-0.075, Math.PI * 2 - 0.2, -0.018)"
+          new2="laptopRoot.rotation.set(-0.075, Math.PI * 3 - 0.2, -0.018)"
+          if old not in s or old2 not in s:
+              raise SystemExit('Expected orientation lines not found; refusing edit')
+          s=s.replace(old,new,1).replace(old2,new2,1)
+          p.write_text(s)
+          PY
+      - name: Verify targeted correction
+        run: |
+          grep -F "Math.PI + travel * Math.PI * 2 - 0.2 * travel" src/start-project-transition-core.js
+          grep -F "Math.PI * 3 - 0.2" src/start-project-transition-core.js
+          node --check src/start-project-transition-core.js
+      - name: Build production app
+        run: |
+          npm ci
+          npm run build
+      - name: Commit correction
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/start-project-transition-core.js
+          git commit -m 'Face MacBook display toward viewer' || exit 0
+          git push
