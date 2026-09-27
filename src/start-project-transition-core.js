@@ -122,7 +122,7 @@ function getLayout(camera, screenWidth) {
   return {
     width, height, mobile,
     initialScale: horizontal / screenWidth,
-    finalScale: (horizontal * (mobile ? 0.254 : 0.306)) / screenWidth,
+    finalScale: (horizontal * (mobile ? 0.2286 : 0.2754)) / screenWidth,
     finalX: mobile ? 0 : -horizontal * 0.225,
     finalY: mobile ? vertical * 0.36 : vertical * 0.055,
     vertical,
