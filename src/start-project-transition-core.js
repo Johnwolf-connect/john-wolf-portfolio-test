@@ -1,145 +1,49 @@
 const STYLE_ID = 'start-project-transition-styles'
 const STAGE_ID = 'start-project-transition-stage'
-const MODEL_URL = '/assets/start-project/macbook/macbook-ultra.glb'
+const MODEL_URL = '/assets/start-project/macbook/macbook-pro-2020.glb'
 const VIDEO_URL = '/assets/start-project/environment.mp4'
 const ROCK_URL = '/assets/start-project/black-stone.png'
 
-function clamp(value, minimum, maximum) {
-  return Math.min(Math.max(value, minimum), maximum)
-}
-
-function mix(start, end, progress) {
-  return start + (end - start) * progress
-}
-
-function easeInOutCubic(value) {
-  return value < 0.5
-    ? 4 * value * value * value
-    : 1 - Math.pow(-2 * value + 2, 3) / 2
-}
-
-function easeOutExpo(value) {
-  return value === 1 ? 1 : 1 - Math.pow(2, -10 * value)
-}
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
+const mix = (a, b, t) => a + (b - a) * t
+const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 
 function solveLinearSystem(matrix) {
   const size = matrix.length
-
   for (let column = 0; column < size; column += 1) {
     let pivotRow = column
-
     for (let row = column + 1; row < size; row += 1) {
-      if (Math.abs(matrix[row][column]) > Math.abs(matrix[pivotRow][column])) {
-        pivotRow = row
-      }
+      if (Math.abs(matrix[row][column]) > Math.abs(matrix[pivotRow][column])) pivotRow = row
     }
-
     if (Math.abs(matrix[pivotRow][column]) < 1e-10) return null
-
-    if (pivotRow !== column) {
-      const temporaryRow = matrix[column]
-      matrix[column] = matrix[pivotRow]
-      matrix[pivotRow] = temporaryRow
-    }
-
+    ;[matrix[column], matrix[pivotRow]] = [matrix[pivotRow], matrix[column]]
     const pivot = matrix[column][column]
-
-    for (let index = column; index <= size; index += 1) {
-      matrix[column][index] /= pivot
-    }
-
+    for (let i = column; i <= size; i += 1) matrix[column][i] /= pivot
     for (let row = 0; row < size; row += 1) {
       if (row === column) continue
-
       const factor = matrix[row][column]
-      if (Math.abs(factor) < 1e-12) continue
-
-      for (let index = column; index <= size; index += 1) {
-        matrix[row][index] -= factor * matrix[column][index]
-      }
+      for (let i = column; i <= size; i += 1) matrix[row][i] -= factor * matrix[column][i]
     }
   }
-
   return matrix.map((row) => row[size])
 }
 
 function getProjectiveTransform(width, height, destination) {
-  const source = [
-    [0, 0],
-    [width, 0],
-    [width, height],
-    [0, height],
-  ]
+  const source = [[0, 0], [width, 0], [width, height], [0, height]]
   const equations = []
-
   source.forEach(([x, y], index) => {
-    const [targetX, targetY] = destination[index]
-
-    equations.push([
-      x,
-      y,
-      1,
-      0,
-      0,
-      0,
-      -targetX * x,
-      -targetX * y,
-      targetX,
-    ])
-
-    equations.push([
-      0,
-      0,
-      0,
-      x,
-      y,
-      1,
-      -targetY * x,
-      -targetY * y,
-      targetY,
-    ])
+    const [tx, ty] = destination[index]
+    equations.push([x, y, 1, 0, 0, 0, -tx * x, -tx * y, tx])
+    equations.push([0, 0, 0, x, y, 1, -ty * x, -ty * y, ty])
   })
-
   const solution = solveLinearSystem(equations)
   if (!solution) return null
-
   const [a, b, c, d, e, f, g, h] = solution
-
-  return `matrix3d(${[
-    a,
-    d,
-    0,
-    g,
-    b,
-    e,
-    0,
-    h,
-    0,
-    0,
-    1,
-    0,
-    c,
-    f,
-    0,
-    1,
-  ].join(',')})`
-}
-
-function polygonArea(points) {
-  let area = 0
-
-  for (let index = 0; index < points.length; index += 1) {
-    const current = points[index]
-    const next = points[(index + 1) % points.length]
-    area += current[0] * next[1] - next[0] * current[1]
-  }
-
-  return area / 2
+  return `matrix3d(${[a,d,0,g,b,e,0,h,0,0,1,0,c,f,0,1].join(',')})`
 }
 
 function injectStylesheet() {
   if (document.getElementById(STYLE_ID)) return
-
   const link = document.createElement('link')
   link.id = STYLE_ID
   link.rel = 'stylesheet'
@@ -150,247 +54,85 @@ function injectStylesheet() {
 function createStage() {
   const existing = document.getElementById(STAGE_ID)
   if (existing) return existing
-
   const stage = document.createElement('section')
   stage.id = STAGE_ID
   stage.className = 'spt-stage'
   stage.setAttribute('aria-hidden', 'true')
   stage.innerHTML = `
-    <video
-      class="spt-environment-video"
-      muted
-      loop
-      playsinline
-      preload="auto"
-      aria-hidden="true"
-    >
+    <video class="spt-environment-video" muted loop playsinline preload="auto" aria-hidden="true">
       <source src="${VIDEO_URL}" type="video/mp4" />
     </video>
-
     <div class="spt-environment-wash" aria-hidden="true"></div>
     <canvas class="spt-laptop-canvas" aria-hidden="true"></canvas>
-
-    <div class="spt-rock-scene" aria-hidden="true">
-      <div class="spt-underlight"></div>
-      <img src="${ROCK_URL}" alt="" draggable="false" />
-    </div>
-
+    <div class="spt-rock-scene" aria-hidden="true"><div class="spt-underlight"></div><img src="${ROCK_URL}" alt="" draggable="false" /></div>
     <div class="spt-mobile-page-flow">
-      <article
-        class="spt-form-card"
-        aria-label="Start a project form"
-      >
-      <p class="spt-form-kicker">Creative partnership</p>
-      <h2>Start a Project</h2>
-      <p class="spt-form-intro">
-        Tell me what you are building and where you want the work to take your brand.
-      </p>
-
-      <form class="spt-form" novalidate>
-        <label>
-          <span>Name</span>
-          <input type="text" name="name" autocomplete="name" placeholder="Your name" />
-        </label>
-
-        <label>
-          <span>Email</span>
-          <input type="email" name="email" autocomplete="email" placeholder="you@example.com" />
-        </label>
-
-        <label>
-          <span>Project type</span>
-          <select name="projectType">
-            <option value="" selected disabled>Select a service</option>
-            <option>Brand identity</option>
-            <option>Website design</option>
-            <option>Creative direction</option>
-            <option>Campaign design</option>
-            <option>Something custom</option>
-          </select>
-        </label>
-        <label class="spt-upload-field">
-          <span>Example image</span>
-
-          <div class="spt-upload-control">
-            <div class="spt-upload-copy">
-              <strong>Upload image</strong>
-              <small class="spt-upload-name">
-                PNG, JPG or WEBP
-              </small>
-            </div>
-
-            <span
-              class="spt-upload-mark"
-              aria-hidden="true"
-            >
-              +
-            </span>
-
-            <input
-              type="file"
-              name="exampleImage"
-              accept="image/png,image/jpeg,image/webp"
-              aria-label="Upload an example image"
-            />
-          </div>
-        </label>
-
-
-        <label class="spt-form-message">
-          <span>Project vision</span>
-          <textarea name="message" rows="4" placeholder="Tell me about the idea, goals, and timing."></textarea>
-        </label>
-
-        <button type="submit">
-          Begin the conversation
-          <span aria-hidden="true">↗</span>
-        </button>
-
-        <p class="spt-form-status" aria-live="polite"></p>
+      <article class="spt-form-card" aria-label="Start a project form">
+        <p class="spt-form-kicker">Creative partnership</p>
+        <h2>Start a Project</h2>
+        <p class="spt-form-intro">Tell me what you are building and where you want the work to take your brand.</p>
+        <form class="spt-form" novalidate>
+          <label><span>Name</span><input type="text" name="name" autocomplete="name" placeholder="Your name" /></label>
+          <label><span>Email</span><input type="email" name="email" autocomplete="email" placeholder="you@example.com" /></label>
+          <label><span>Project type</span><select name="projectType"><option value="" selected disabled>Select a service</option><option>Brand identity</option><option>Website design</option><option>Creative direction</option><option>Campaign design</option><option>Something custom</option></select></label>
+          <label class="spt-upload-field"><span>Example image</span><div class="spt-upload-control"><div class="spt-upload-copy"><strong>Upload image</strong><small class="spt-upload-name">PNG, JPG or WEBP</small></div><span class="spt-upload-mark" aria-hidden="true">+</span><input type="file" name="exampleImage" accept="image/png,image/jpeg,image/webp" aria-label="Upload an example image" /></div></label>
+          <label class="spt-form-message"><span>Project vision</span><textarea name="message" rows="4" placeholder="Tell me about the idea, goals, and timing."></textarea></label>
+          <button type="submit">Begin the conversation <span aria-hidden="true">↗</span></button>
+          <p class="spt-form-status" aria-live="polite"></p>
         </form>
       </article>
     </div>
-
-    <button class="spt-close" type="button" aria-label="Return to portfolio">
-      <span aria-hidden="true">×</span>
-    </button>
-  `
-
+    <button class="spt-close" type="button" aria-label="Return to portfolio"><span aria-hidden="true">×</span></button>`
   document.documentElement.append(stage)
   return stage
 }
 
-function saveInlineStyles(element, properties) {
-  const saved = {}
-
-  properties.forEach((property) => {
-    saved[property] = element.style[property]
-  })
-
-  return saved
-}
-
-function restoreInlineStyles(element, saved) {
-  Object.entries(saved).forEach(([property, value]) => {
-    element.style[property] = value
-  })
-}
-
-function createLivePageLayer() {
-  const scrollPosition = window.scrollY
-  const body = document.body
-  const html = document.documentElement
-  const movedNodes = Array.from(body.children).filter(
-    (element) => element.tagName !== 'SCRIPT',
-  )
-  const originalBodyStyles = saveInlineStyles(body, [
-    'overflow',
-    'position',
-    'width',
-    'height',
-  ])
-  const originalHtmlStyles = saveInlineStyles(html, ['overflow'])
-
+function clonePortfolioLayer() {
+  const source = document.getElementById('root') || document.body.firstElementChild
+  if (!source) return null
   const screen = document.createElement('div')
   screen.className = 'spt-live-screen'
   screen.setAttribute('aria-hidden', 'true')
-
-  const scrollLayer = document.createElement('div')
-  scrollLayer.className = 'spt-live-scroll'
-  scrollLayer.style.top = `${-scrollPosition}px`
-  scrollLayer.style.height = `${Math.max(
-    document.documentElement.scrollHeight,
-    window.innerHeight,
-  )}px`
-
-  movedNodes.forEach((node) => scrollLayer.append(node))
-  screen.append(scrollLayer)
-  html.append(screen)
-
-  html.style.overflow = 'hidden'
-  body.style.overflow = 'hidden'
-  body.style.position = 'fixed'
-  body.style.width = '100%'
-  body.style.height = '100%'
-
-  const restore = () => {
-    const firstScript = Array.from(body.childNodes).find(
-      (node) => node.nodeType === 1 && node.tagName === 'SCRIPT',
-    )
-
-    movedNodes.forEach((node) => {
-      body.insertBefore(node, firstScript || null)
-    })
-
-    screen.remove()
-    restoreInlineStyles(body, originalBodyStyles)
-    restoreInlineStyles(html, originalHtmlStyles)
-    window.scrollTo(0, scrollPosition)
-  }
-
-  return {
-    screen,
-    restore,
-    width: window.innerWidth,
-    height: window.innerHeight,
-  }
+  const scroll = document.createElement('div')
+  scroll.className = 'spt-live-scroll'
+  const clone = source.cloneNode(true)
+  clone.querySelectorAll('[id]').forEach((node) => node.removeAttribute('id'))
+  clone.querySelectorAll('video, audio').forEach((node) => { node.autoplay = false; node.removeAttribute('autoplay') })
+  scroll.style.top = `${-window.scrollY}px`
+  scroll.append(clone)
+  screen.append(scroll)
+  document.documentElement.append(screen)
+  return { screen, width: window.innerWidth, height: window.innerHeight, destroy: () => screen.remove() }
 }
 
-function getSceneLayout(camera, screenWidth) {
-  const viewportWidth = window.innerWidth
-  const viewportHeight = window.innerHeight
-  const aspect = viewportWidth / viewportHeight
-  const verticalWorldSize =
-    2 * camera.position.z * Math.tan((camera.fov * Math.PI) / 360)
-  const horizontalWorldSize = verticalWorldSize * aspect
-  const mobile = viewportWidth < 820
-  const finalScreenFraction = mobile ? 0.31 : 0.34
-
+function getLayout(camera, screenWidth) {
+  const width = window.innerWidth
+  const height = window.innerHeight
+  const vertical = 2 * camera.position.z * Math.tan((camera.fov * Math.PI) / 360)
+  const horizontal = vertical * (width / height)
+  const mobile = width < 820
   return {
-    viewportWidth,
-    viewportHeight,
-    screenHeight: Math.min(
-      screenWidth * (viewportHeight / viewportWidth),
-      194,
-    ),
-    initialScale: horizontalWorldSize / screenWidth,
-    finalScale:
-      (
-        horizontalWorldSize *
-        finalScreenFraction *
-        (mobile ? 0.82 : 0.9)
-      ) / screenWidth,
-    finalX: mobile ? 0 : -horizontalWorldSize * 0.225,
-    finalY: mobile
-      ? verticalWorldSize * 0.36
-      : verticalWorldSize * 0.055,
-    verticalWorldSize,
-    horizontalWorldSize,
-    mobile,
+    width, height, mobile,
+    initialScale: horizontal / screenWidth,
+    finalScale: (horizontal * (mobile ? 0.254 : 0.306)) / screenWidth,
+    finalX: mobile ? 0 : -horizontal * 0.225,
+    finalY: mobile ? vertical * 0.36 : vertical * 0.055,
+    vertical,
   }
 }
 
 export function initStartProjectTransition({ THREE, GLTFLoader }) {
-  if (window.__johnWolfStartProjectTransition) {
-    return window.__johnWolfStartProjectTransition
-  }
-
+  if (window.__johnWolfStartProjectTransition) return window.__johnWolfStartProjectTransition
   injectStylesheet()
   const stage = createStage()
   const video = stage.querySelector('.spt-environment-video')
   const canvas = stage.querySelector('.spt-laptop-canvas')
   const closeButton = stage.querySelector('.spt-close')
   const form = stage.querySelector('.spt-form')
-  const formStatus = stage.querySelector('.spt-form-status')
-  const exampleImageInput = stage.querySelector('input[name="exampleImage"]')
-  const exampleImageName = stage.querySelector('.spt-upload-name')
+  const status = stage.querySelector('.spt-form-status')
+  const upload = stage.querySelector('input[name="exampleImage"]')
+  const uploadName = stage.querySelector('.spt-upload-name')
 
-  const renderer = new THREE.WebGLRenderer({
-    canvas,
-    alpha: true,
-    antialias: true,
-    powerPreference: 'high-performance',
-  })
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'high-performance' })
   renderer.setClearColor(0x000000, 0)
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
   renderer.outputColorSpace = THREE.SRGBColorSpace
@@ -400,517 +142,238 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
   const scene = new THREE.Scene()
   const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 3000)
   camera.position.set(0, 0, 900)
-  camera.lookAt(0, 0, 0)
-
   const laptopRoot = new THREE.Group()
   scene.add(laptopRoot)
-
   scene.add(new THREE.HemisphereLight(0xf4f4ff, 0x210307, 2.15))
-
-  const keyLight = new THREE.DirectionalLight(0xffffff, 4.4)
-  keyLight.position.set(-320, 420, 540)
-  scene.add(keyLight)
-
-  const redRim = new THREE.PointLight(0xff243f, 2700, 1100, 2)
-  redRim.position.set(-260, -180, 260)
-  scene.add(redRim)
-
-  const coolRim = new THREE.PointLight(0x9db8ff, 1350, 900, 2)
-  coolRim.position.set(250, 210, 160)
-  scene.add(coolRim)
+  const key = new THREE.DirectionalLight(0xffffff, 4.4); key.position.set(-320, 420, 540); scene.add(key)
+  const red = new THREE.PointLight(0xff243f, 2700, 1100, 2); red.position.set(-260, -180, 260); scene.add(red)
+  const cool = new THREE.PointLight(0x9db8ff, 1350, 900, 2); cool.position.set(250, 210, 160); scene.add(cool)
 
   const screenWidth = 310
-  let layout = getSceneLayout(camera, screenWidth)
-  let livePage = null
+  let layout = getLayout(camera, screenWidth)
   let active = false
   let animating = false
   let settled = false
-  let animationFrame = 0
-  let hoverStartedAt = 0
-  let modelLoaded = false
-  let modelLoadFailed = false
-
-  let screenSurface = null
-  let screenLocalCorners = null
+  let frame = 0
+  let livePage = null
   let lidPivot = null
+  let screenPlane = null
+  let screenCorners = []
   let lidOpenProgress = 0
-  const CLOSED_LID_ANGLE = THREE.MathUtils.degToRad(110.05)
-  const loader = new GLTFLoader()
+  let modelLoaded = false
+  let modelFailed = false
+  let hoverStartedAt = 0
+  const CLOSED_ANGLE = Math.PI / 2
+
+  function resize() {
+    layout = getLayout(camera, screenWidth)
+    camera.aspect = layout.width / layout.height
+    camera.updateProjectionMatrix()
+    renderer.setSize(layout.width, layout.height, false)
+  }
 
   const modelReady = new Promise((resolve) => {
-    loader.load(
-      MODEL_URL,
-      (gltf) => {
+    new GLTFLoader().load(MODEL_URL, (gltf) => {
+      try {
         const model = gltf.scene
+        const lid = model.getObjectByName('Rectangle004')
+        screenPlane = model.getObjectByName('Plane006')
+        if (!lid || !screenPlane) throw new Error('Required lid/screen groups Rectangle004 + Plane006 were not found')
 
         model.traverse((child) => {
           if (!child.isMesh) return
-
-          const materials = Array.isArray(child.material)
-            ? child.material
-            : [child.material]
-
-          const isWallpaperSurface =
-            child.name === 'SadnAkehSlxIwKv' ||
-            materials.some(
-              (material) =>
-                material?.name === 'LCD' ||
-                material?.name === 'VNZklasZKSWjWUk',
-            )
-
-          if (isWallpaperSurface) {
-            /*
-              The GLB's "Macbook Pro wallpaper" texture is assigned
-              to the LCD material. Hide only that mesh so the live
-              portfolio page replaces the wallpaper exactly.
-            */
-            screenSurface = child
-            child.visible = false
-            return
-          }
-
           child.castShadow = true
           child.receiveShadow = true
+          child.frustumCulled = false
+          const name = child.name
+          if (name === 'Object026') child.material = new THREE.MeshStandardMaterial({ color: 0x17181b, metalness: 0.12, roughness: 0.55 })
+          else if (name === 'Object025') child.material = new THREE.MeshStandardMaterial({ color: 0x65686d, metalness: 0.72, roughness: 0.34 })
+          else child.material = new THREE.MeshStandardMaterial({ color: 0x55585e, metalness: 0.84, roughness: 0.31 })
         })
 
-        /*
-          MacBook Air 15 (Space Gray) 2023. The source model is authored
-          open. Re-parent the complete lid assembly to a hinge pivot so the
-          transition can begin physically closed and open during the turn.
-        */
-        const lidAssembly = model.getObjectByName('GyAtsALzJhKEkPM')
-
-        if (lidAssembly?.parent) {
-          const lidParent = lidAssembly.parent
-          lidPivot = new THREE.Group()
-          lidPivot.name = 'JohnWolfMacBookLidPivot'
-          lidPivot.position.set(0, -0.25, -11.75)
-          lidParent.add(lidPivot)
-          lidParent.updateMatrixWorld(true)
-          lidPivot.updateMatrixWorld(true)
-          lidPivot.attach(lidAssembly)
-          lidPivot.rotation.x = CLOSED_LID_ANGLE
-          lidOpenProgress = 0
-        }
-
-        if (screenSurface) {
-          screenLocalCorners = [
-            new THREE.Vector3(-16.2, 20.15, -19.48),
-            new THREE.Vector3(16.2, 20.15, -19.48),
-            new THREE.Vector3(16.2, 1.3, -12.59),
-            new THREE.Vector3(-16.2, 1.3, -12.59),
-          ]
-        }
-
-        /*
-          Scale the 34 cm wide MacBook so its LCD is the same 310-unit
-          transition surface used by the existing camera choreography, then
-          center that LCD around the transition origin.
-        */
-        model.scale.setScalar(9.48)
-        model.position.set(0, -101.7, 152)
-
+        model.updateMatrixWorld(true)
+        const rawBounds = new THREE.Box3().setFromObject(model)
+        const rawSize = new THREE.Vector3(); rawBounds.getSize(rawSize)
+        const modelScale = rawSize.x > 0.001 ? 336 / rawSize.x : 1
+        model.scale.setScalar(modelScale)
+        model.updateMatrixWorld(true)
+        const scaledBounds = new THREE.Box3().setFromObject(model)
+        const center = new THREE.Vector3(); scaledBounds.getCenter(center)
+        model.position.sub(center)
         laptopRoot.add(model)
+        model.updateMatrixWorld(true)
+
+        const lidBounds = new THREE.Box3().setFromObject(lid)
+        const hingeWorld = new THREE.Vector3((lidBounds.min.x + lidBounds.max.x) / 2, lidBounds.min.y, (lidBounds.min.z + lidBounds.max.z) / 2)
+        const hingeLocal = model.worldToLocal(hingeWorld.clone())
+        lidPivot = new THREE.Group()
+        lidPivot.name = 'JohnWolfMacBook2020LidPivot'
+        lidPivot.position.copy(hingeLocal)
+        model.add(lidPivot)
+        model.updateMatrixWorld(true)
+        lidPivot.updateMatrixWorld(true)
+        lidPivot.attach(lid)
+        lidPivot.attach(screenPlane)
+
+        screenPlane.geometry.computeBoundingBox()
+        const box = screenPlane.geometry.boundingBox
+        const z = box.max.z
+        screenCorners = [
+          new THREE.Vector3(box.min.x, box.max.y, z),
+          new THREE.Vector3(box.max.x, box.max.y, z),
+          new THREE.Vector3(box.max.x, box.min.y, z),
+          new THREE.Vector3(box.min.x, box.min.y, z),
+        ].map((position, index) => {
+          const anchor = new THREE.Object3D()
+          anchor.name = `JohnWolfScreenCorner${index + 1}`
+          anchor.position.copy(position)
+          screenPlane.add(anchor)
+          return anchor
+        })
+        screenPlane.visible = false
+        lidPivot.rotation.x = CLOSED_ANGLE
         modelLoaded = true
-        resolve(model)
-      },
-      undefined,
-      (error) => {
-        modelLoadFailed = true
-        console.error(
-          'The uploaded MacBook Ultra model could not load.',
-          error,
-        )
-        resolve(null)
-      },
-    )
+        resolve(true)
+      } catch (error) {
+        modelFailed = true
+        console.error('MacBook Pro 2020 setup failed.', error)
+        resolve(false)
+      }
+    }, undefined, (error) => {
+      modelFailed = true
+      console.error('MacBook Pro 2020 model failed to load.', error)
+      resolve(false)
+    })
   })
 
-  function resizeRenderer() {
-    layout = getSceneLayout(camera, screenWidth)
-    camera.aspect = layout.viewportWidth / layout.viewportHeight
-    camera.updateProjectionMatrix()
-    renderer.setSize(layout.viewportWidth, layout.viewportHeight, false)
-  }
-
-  function getScreenCorners() {
-    if (!screenSurface) {
-      const halfWidth = screenWidth / 2
-      const halfHeight = layout.screenHeight / 2
-
-      return [
-        new THREE.Vector3(-halfWidth, halfHeight, 0),
-        new THREE.Vector3(halfWidth, halfHeight, 0),
-        new THREE.Vector3(halfWidth, -halfHeight, 0),
-        new THREE.Vector3(-halfWidth, -halfHeight, 0),
-      ].map((corner) =>
-        laptopRoot.localToWorld(corner),
-      )
-    }
-
-    if (screenLocalCorners) {
-      return screenLocalCorners.map((corner) =>
-        screenSurface.localToWorld(corner.clone()),
-      )
-    }
-
-    const geometry = screenSurface.geometry
-
-    if (!geometry.boundingBox) {
-      geometry.computeBoundingBox()
-    }
-
-    const bounds = geometry.boundingBox
-    const insetX =
-      (bounds.max.x - bounds.min.x) * 0.004
-    const insetZ =
-      (bounds.max.z - bounds.min.z) * 0.004
-
-    const left = bounds.min.x + insetX
-    const right = bounds.max.x - insetX
-    const bottom = bounds.min.z + insetZ
-    const top = bounds.max.z - insetZ
-    const surfaceY =
-      (bounds.min.y + bounds.max.y) / 2
-
-    return [
-      new THREE.Vector3(left, surfaceY, top),
-      new THREE.Vector3(right, surfaceY, top),
-      new THREE.Vector3(right, surfaceY, bottom),
-      new THREE.Vector3(left, surfaceY, bottom),
-    ].map((corner) =>
-      screenSurface.localToWorld(corner),
-    )
-  }
-
-  function projectLivePage() {
-    if (!livePage) return
-
-    const projected = getScreenCorners().map((corner) => {
-      const point = corner.clone().project(camera)
-      return [
-        (point.x * 0.5 + 0.5) * layout.viewportWidth,
-        (-point.y * 0.5 + 0.5) * layout.viewportHeight,
-      ]
+  function projectScreen() {
+    if (!livePage || screenCorners.length !== 4 || !modelLoaded) return
+    const points = screenCorners.map((anchor) => {
+      const point = new THREE.Vector3(); anchor.getWorldPosition(point); point.project(camera)
+      return [(point.x * 0.5 + 0.5) * layout.width, (-point.y * 0.5 + 0.5) * layout.height]
     })
-
-    const area = polygonArea(projected)
-    const transform = getProjectiveTransform(
-      livePage.width,
-      livePage.height,
-      projected,
-    )
-
-    const screenReveal = clamp((lidOpenProgress - 0.12) / 0.24, 0, 1)
-    livePage.screen.style.opacity =
-      area > 1 ? String(screenReveal) : '0'
-
-    if (transform) {
-      livePage.screen.style.transform = transform
-    }
+    const transform = getProjectiveTransform(livePage.width, livePage.height, points)
+    if (transform) livePage.screen.style.transform = transform
+    livePage.screen.style.opacity = String(clamp((lidOpenProgress - 0.12) / 0.25, 0, 1))
   }
 
-  function setOpeningPose(progress) {
-    const firstPhase = clamp(progress / 0.2, 0, 1)
-    const travelPhase = clamp((progress - 0.08) / 0.92, 0, 1)
-    const travelEase = easeInOutCubic(travelPhase)
-    const pullEase = easeOutExpo(firstPhase)
-
-    laptopRoot.scale.setScalar(
-      mix(
-        layout.initialScale,
-        mix(layout.initialScale * 0.56, layout.finalScale, travelEase),
-        pullEase,
-      ),
-    )
-
-    laptopRoot.position.x = mix(0, layout.finalX, travelEase)
-    laptopRoot.position.y =
-      mix(0, layout.finalY, travelEase) +
-      Math.sin(travelPhase * Math.PI) * layout.verticalWorldSize * 0.055
-    laptopRoot.position.z = Math.sin(travelPhase * Math.PI) * -42
-
-    laptopRoot.rotation.x =
-      Math.sin(travelPhase * Math.PI) * -0.22 +
-      mix(0, -0.075, travelEase)
-    laptopRoot.rotation.y =
-      travelEase * Math.PI * 2 + mix(0, -0.2, travelEase)
-    laptopRoot.rotation.z =
-      Math.sin(travelPhase * Math.PI * 2) * 0.055 +
-      mix(0, -0.018, travelEase)
-
-    const lidPhase = clamp((progress - 0.08) / 0.64, 0, 1)
-    lidOpenProgress = easeInOutCubic(lidPhase)
-
-    if (lidPivot) {
-      lidPivot.rotation.x = mix(
-        CLOSED_LID_ANGLE,
-        0,
-        lidOpenProgress,
-      )
-    }
-
-    if (progress > 0.08 && livePage) {
-      livePage.screen.classList.add('is-framed')
-    }
+  function setPose(progress) {
+    const travel = ease(clamp((progress - 0.08) / 0.92, 0, 1))
+    laptopRoot.scale.setScalar(mix(layout.initialScale, layout.finalScale, travel))
+    laptopRoot.position.set(layout.finalX * travel, layout.finalY * travel + Math.sin(travel * Math.PI) * layout.vertical * 0.055, Math.sin(travel * Math.PI) * -42)
+    laptopRoot.rotation.set(Math.sin(travel * Math.PI) * -0.22 - 0.075 * travel, travel * Math.PI * 2 - 0.2 * travel, Math.sin(travel * Math.PI * 2) * 0.055 - 0.018 * travel)
+    lidOpenProgress = ease(clamp((progress - 0.1) / 0.62, 0, 1))
+    if (lidPivot) lidPivot.rotation.x = mix(CLOSED_ANGLE, 0, lidOpenProgress)
+    if (progress > 0.12) livePage?.screen.classList.add('is-framed')
     if (progress > 0.26) stage.classList.add('is-rock-visible')
     if (progress > 0.72) stage.classList.add('is-form-visible')
   }
 
-  function setSettledPose(timestamp) {
-    const elapsed = (timestamp - hoverStartedAt) / 1000
-    const hover = Math.sin(elapsed * 1.15)
-    const drift = Math.sin(elapsed * 0.58)
-
-    laptopRoot.scale.setScalar(layout.finalScale)
-    laptopRoot.position.set(
-      layout.finalX + drift * 2.6,
-      layout.finalY + hover * 5.2,
-      0,
-    )
-    laptopRoot.rotation.set(
-      -0.075 + drift * 0.006,
-      Math.PI * 2 - 0.2 + hover * 0.008,
-      -0.018 + drift * 0.009,
-    )
-
-    lidOpenProgress = 1
-    if (lidPivot) lidPivot.rotation.x = 0
-  }
-
-  function renderFrame(timestamp) {
+  function render(timestamp) {
     if (!active) return
-
-    if (settled) setSettledPose(timestamp)
-
-    projectLivePage()
+    if (settled && modelLoaded) {
+      const elapsed = (timestamp - hoverStartedAt) / 1000
+      laptopRoot.scale.setScalar(layout.finalScale)
+      laptopRoot.position.set(layout.finalX + Math.sin(elapsed * 0.58) * 2.6, layout.finalY + Math.sin(elapsed * 1.15) * 5.2, 0)
+      laptopRoot.rotation.set(-0.075, Math.PI * 2 - 0.2, -0.018)
+      lidOpenProgress = 1
+      if (lidPivot) lidPivot.rotation.x = 0
+    }
+    projectScreen()
     renderer.render(scene, camera)
-    animationFrame = requestAnimationFrame(renderFrame)
+    frame = requestAnimationFrame(render)
   }
 
   function animate(duration, update) {
     return new Promise((resolve) => {
-      const startedAt = performance.now()
-
-      const tick = (timestamp) => {
-        const progress = clamp((timestamp - startedAt) / duration, 0, 1)
+      const start = performance.now()
+      const tick = (now) => {
+        const progress = clamp((now - start) / duration, 0, 1)
         update(progress)
-
-        if (progress < 1) {
-          requestAnimationFrame(tick)
-        } else {
-          resolve()
-        }
+        if (progress < 1) requestAnimationFrame(tick); else resolve()
       }
-
       requestAnimationFrame(tick)
     })
   }
 
-  async function openTransition() {
+  async function open() {
     if (active || animating) return
-
     animating = true
-    formStatus.textContent = ''
-
-    await modelReady
-
-    if (modelLoadFailed || !modelLoaded) {
-      animating = false
-      return
-    }
-
-    resizeRenderer()
-
-    const mobileProjectPage =
-      window.innerWidth < 820
-
-    const lenisAttributes = [
-      'data-lenis-prevent',
-      'data-lenis-prevent-wheel',
-      'data-lenis-prevent-touch',
-    ]
-
-    lenisAttributes.forEach((attribute) => {
-      if (mobileProjectPage) {
-        stage.setAttribute(attribute, '')
-      } else {
-        stage.removeAttribute(attribute)
-      }
-    })
-
-    stage.scrollTop = 0
-    livePage = createLivePageLayer()
+    status.textContent = ''
+    resize()
     active = true
     settled = false
     stage.classList.remove('is-rock-visible', 'is-form-visible', 'is-settled')
     stage.classList.add('is-active')
     stage.setAttribute('aria-hidden', 'false')
-    stage.scrollTop = 0
     video.currentTime = 0
     video.play().catch(() => {})
+    livePage = clonePortfolioLayer()
+    cancelAnimationFrame(frame)
+    frame = requestAnimationFrame(render)
+
+    await modelReady
+    if (modelFailed || !modelLoaded) {
+      stage.classList.add('is-rock-visible', 'is-form-visible', 'is-settled')
+      status.textContent = 'The project form is available while the 3D preview reloads.'
+      animating = false
+      return
+    }
 
     laptopRoot.position.set(0, 0, 0)
     laptopRoot.rotation.set(0, 0, 0)
     laptopRoot.scale.setScalar(layout.initialScale)
     lidOpenProgress = 0
-    if (lidPivot) lidPivot.rotation.x = CLOSED_LID_ANGLE
-
-    cancelAnimationFrame(animationFrame)
-    animationFrame = requestAnimationFrame(renderFrame)
-
-    await animate(2860, (progress) => {
-      setOpeningPose(progress)
-    })
-
+    if (lidPivot) lidPivot.rotation.x = CLOSED_ANGLE
+    await animate(2860, setPose)
     settled = true
     hoverStartedAt = performance.now()
     stage.classList.add('is-settled', 'is-rock-visible', 'is-form-visible')
-    closeButton.focus({ preventScroll: true })
     animating = false
   }
 
-  async function closeTransition() {
+  async function close() {
     if (!active || animating) return
-
     animating = true
-    settled = false
     stage.classList.remove('is-form-visible', 'is-settled')
-
-    const startScale = laptopRoot.scale.x
-    const startPosition = laptopRoot.position.clone()
-    const startRotation = laptopRoot.rotation.clone()
-    const startLidRotation = lidPivot?.rotation.x ?? 0
-
-    await animate(1680, (progress) => {
-      const eased = easeInOutCubic(progress)
-      const reverseSpin = mix(startRotation.y, Math.PI * 4, eased)
-
-      laptopRoot.scale.setScalar(mix(startScale, layout.initialScale, eased))
-      laptopRoot.position.set(
-        mix(startPosition.x, 0, eased),
-        mix(startPosition.y, 0, eased),
-        mix(startPosition.z, 0, eased),
-      )
-      laptopRoot.rotation.set(
-        mix(startRotation.x, 0, eased),
-        reverseSpin,
-        mix(startRotation.z, 0, eased),
-      )
-
-      lidOpenProgress = 1 - eased
-      if (lidPivot) {
-        lidPivot.rotation.x = mix(
-          startLidRotation,
-          CLOSED_LID_ANGLE,
-          eased,
-        )
-      }
-
-      if (progress > 0.38) stage.classList.remove('is-rock-visible')
-      if (progress > 0.88 && livePage) {
-        livePage.screen.classList.remove('is-framed')
-      }
-    })
-
-    laptopRoot.rotation.set(0, 0, 0)
-    laptopRoot.position.set(0, 0, 0)
-    laptopRoot.scale.setScalar(layout.initialScale)
-    lidOpenProgress = 0
-    if (lidPivot) lidPivot.rotation.x = CLOSED_LID_ANGLE
-    projectLivePage()
-
-    livePage?.restore()
-    livePage = null
-    active = false
-    stage.classList.remove(
-      'is-active',
-      'is-rock-visible',
-      'is-form-visible',
-      'is-settled',
-    )
+    if (modelLoaded) {
+      const startScale = laptopRoot.scale.x
+      const startPosition = laptopRoot.position.clone()
+      const startRotation = laptopRoot.rotation.clone()
+      await animate(900, (p) => {
+        const t = ease(p)
+        laptopRoot.scale.setScalar(mix(startScale, layout.initialScale, t))
+        laptopRoot.position.lerpVectors(startPosition, new THREE.Vector3(), t)
+        laptopRoot.rotation.set(mix(startRotation.x, 0, t), mix(startRotation.y, Math.PI * 4, t), mix(startRotation.z, 0, t))
+        lidOpenProgress = 1 - t
+        if (lidPivot) lidPivot.rotation.x = mix(0, CLOSED_ANGLE, t)
+      })
+    }
+    livePage?.destroy(); livePage = null
+    active = false; settled = false
+    stage.classList.remove('is-active', 'is-rock-visible', 'is-form-visible', 'is-settled')
     stage.setAttribute('aria-hidden', 'true')
-    video.pause()
-    video.currentTime = 0
-    cancelAnimationFrame(animationFrame)
+    video.pause(); video.currentTime = 0
+    cancelAnimationFrame(frame)
     animating = false
   }
 
-  function startFromEvent(event) {
-    const trigger = event.target.closest?.(
-      '.header-cta, a[href="#contact"], a[href="/#contact"]',
-    )
-
-    if (!trigger) return
-
-    const label = (
-      trigger.textContent ||
-      ''
-    ).trim()
-
-    const startsProject =
-      /start\s+a?\s*project/i.test(label)
-
-    const opensContact =
-      /^contact$/i.test(label)
-
-    if (!startsProject && !opensContact) return
-
-    event.preventDefault()
-    event.stopPropagation()
-    event.stopImmediatePropagation()
-
-    openTransition()
+  function trigger(event) {
+    const target = event.target.closest?.('.header-cta, [data-start-project-trigger]')
+    if (!target || !/start\s+a?\s*project/i.test((target.textContent || '').trim())) return
+    event.preventDefault(); event.stopPropagation(); event.stopImmediatePropagation()
+    open()
   }
 
-  function handleKeydown(event) {
-    if (event.key === 'Escape' && active) {
-      event.preventDefault()
-      closeTransition()
-    }
-  }
+  closeButton.addEventListener('click', close)
+  window.addEventListener('click', trigger, true)
+  window.addEventListener('keydown', (event) => { if (event.key === 'Escape' && active) close() })
+  window.addEventListener('resize', resize)
+  upload?.addEventListener('change', () => { if (uploadName) uploadName.textContent = upload.files?.[0]?.name || 'PNG, JPG or WEBP' })
+  form.addEventListener('submit', (event) => { event.preventDefault(); status.textContent = 'The visual form is ready. Submission wiring comes next.' })
+  resize()
 
-  function handleResize() {
-    resizeRenderer()
-
-    if (active && livePage) {
-      livePage.width = window.innerWidth
-      livePage.height = window.innerHeight
-      livePage.screen.style.width = `${livePage.width}px`
-      livePage.screen.style.height = `${livePage.height}px`
-    }
-  }
-
-  exampleImageInput?.addEventListener(
-    'change',
-    () => {
-      const selectedFile =
-        exampleImageInput.files?.[0]
-
-      if (!exampleImageName) return
-
-      exampleImageName.textContent =
-        selectedFile?.name ||
-        'PNG, JPG or WEBP'
-    },
-  )
-
-  form.addEventListener('submit', (event) => {
-    event.preventDefault()
-    formStatus.textContent = 'The visual form is ready. Submission wiring comes next.'
-  })
-  closeButton.addEventListener('click', closeTransition)
-  window.addEventListener('click', startFromEvent, true)
-  window.addEventListener('keydown', handleKeydown)
-  window.addEventListener('resize', handleResize)
-  resizeRenderer()
-
-  const api = {
-    open: openTransition,
-    close: closeTransition,
-  }
-
+  const api = { open, close }
   window.__johnWolfStartProjectTransition = api
   return api
 }
-
