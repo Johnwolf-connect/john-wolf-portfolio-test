@@ -1,0 +1,56 @@
+name: Inspect MacBook GLB
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/inspect-macbook-glb.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect GLB hierarchy and bounds
+        run: |
+          python3 - <<'PY'
+          import json, struct, math
+          from pathlib import Path
+
+          p=Path('public/assets/start-project/macbook/macbook-ultra.glb')
+          data=p.read_bytes()
+          magic,version,total=struct.unpack_from('<III',data,0)
+          off=12
+          j=None
+          while off < len(data):
+              ln,typ=struct.unpack_from('<II',data,off); off+=8
+              chunk=data[off:off+ln]; off+=ln
+              if typ==0x4E4F534A:
+                  j=json.loads(chunk.decode('utf-8').rstrip('\x00 \t\r\n'))
+                  break
+          assert j
+          lines=[]
+          lines.append(f'asset={j.get("asset")}')
+          lines.append(f'scene={j.get("scene")} scenes={j.get("scenes")}')
+          lines.append('NODES:')
+          for i,n in enumerate(j.get('nodes',[])):
+              lines.append(f'{i}: name={n.get("name")} mesh={n.get("mesh")} children={n.get("children")} t={n.get("translation")} r={n.get("rotation")} s={n.get("scale")} matrix={n.get("matrix")}')
+          lines.append('MESH PRIMITIVE POSITION ACCESSOR BOUNDS:')
+          for mi,m in enumerate(j.get('meshes',[])):
+              for pi,pr in enumerate(m.get('primitives',[])):
+                  ai=pr.get('attributes',{}).get('POSITION')
+                  if ai is None: continue
+                  a=j['accessors'][ai]
+                  lines.append(f'mesh {mi} {m.get("name")} prim {pi}: accessor={ai} min={a.get("min")} max={a.get("max")} count={a.get("count")}')
+          Path('macbook-glb-inspection.txt').write_text('\n'.join(lines))
+          PY
+      - name: Commit inspection report
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add macbook-glb-inspection.txt
+          git commit -m 'Inspect MacBook GLB geometry' || exit 0
+          git push
