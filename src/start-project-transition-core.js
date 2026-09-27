@@ -1,6 +1,6 @@
 const STYLE_ID = 'start-project-transition-styles'
 const STAGE_ID = 'start-project-transition-stage'
-const MODEL_URL = '/assets/start-project/macbook/macbook-pro-2020.glb'
+const MODEL_URL = '/assets/start-project/macbook-m5/macbook-pro-14-m5.glb'
 const VIDEO_URL = '/assets/start-project/environment.mp4'
 const ROCK_URL = '/assets/start-project/black-stone.png'
 
@@ -163,7 +163,7 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
   let modelLoaded = false
   let modelFailed = false
   let hoverStartedAt = 0
-  const CLOSED_ANGLE = Math.PI / 2
+  const CLOSED_ANGLE = 1.93
 
   function resize() {
     layout = getLayout(camera, screenWidth)
@@ -176,19 +176,15 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
     new GLTFLoader().load(MODEL_URL, (gltf) => {
       try {
         const model = gltf.scene
-        const lid = model.getObjectByName('Rectangle004')
-        screenPlane = model.getObjectByName('Plane006')
-        if (!lid || !screenPlane) throw new Error('Required lid/screen groups Rectangle004 + Plane006 were not found')
+        const lid = model.getObjectByName('RcexTyyhpuJYATQ')
+        screenPlane = model.getObjectByName('tfTbkkzhxqpKRgC')
+        if (!lid || !screenPlane) throw new Error('Required M5 lid/screen groups were not found')
 
         model.traverse((child) => {
           if (!child.isMesh) return
           child.castShadow = true
           child.receiveShadow = true
           child.frustumCulled = false
-          const name = child.name
-          if (name === 'Object026') child.material = new THREE.MeshStandardMaterial({ color: 0x17181b, metalness: 0.12, roughness: 0.55 })
-          else if (name === 'Object025') child.material = new THREE.MeshStandardMaterial({ color: 0x65686d, metalness: 0.72, roughness: 0.34 })
-          else child.material = new THREE.MeshStandardMaterial({ color: 0x55585e, metalness: 0.84, roughness: 0.31 })
         })
 
         model.updateMatrixWorld(true)
@@ -204,48 +200,45 @@ export function initStartProjectTransition({ THREE, GLTFLoader }) {
         model.updateMatrixWorld(true)
 
         const lidBounds = new THREE.Box3().setFromObject(lid)
-        const hingeWorld = new THREE.Vector3((lidBounds.min.x + lidBounds.max.x) / 2, lidBounds.min.y, (lidBounds.min.z + lidBounds.max.z) / 2)
+        const hingeWorld = new THREE.Vector3((lidBounds.min.x + lidBounds.max.x) / 2, lidBounds.max.y, lidBounds.max.z)
         const hingeLocal = model.worldToLocal(hingeWorld.clone())
         lidPivot = new THREE.Group()
-        lidPivot.name = 'JohnWolfMacBook2020LidPivot'
+        lidPivot.name = 'JohnWolfMacBookM5LidPivot'
         lidPivot.position.copy(hingeLocal)
         model.add(lidPivot)
         model.updateMatrixWorld(true)
         lidPivot.updateMatrixWorld(true)
         lidPivot.attach(lid)
-        lidPivot.attach(screenPlane)
 
-        screenPlane.geometry.computeBoundingBox()
-        const box = screenPlane.geometry.boundingBox
-        const z = box.max.z
-        screenCorners = [
-          new THREE.Vector3(box.min.x, box.max.y, z),
-          new THREE.Vector3(box.max.x, box.max.y, z),
-          new THREE.Vector3(box.max.x, box.min.y, z),
-          new THREE.Vector3(box.min.x, box.min.y, z),
-        ].map((position, index) => {
+        const positions = screenPlane.geometry.attributes.position
+        const vertices = []
+        for (let i = 0; i < positions.count; i += 1) vertices.push(new THREE.Vector3().fromBufferAttribute(positions, i))
+        const minX = Math.min(...vertices.map((v) => v.x)); const maxX = Math.max(...vertices.map((v) => v.x))
+        const minY = Math.min(...vertices.map((v) => v.y)); const maxY = Math.max(...vertices.map((v) => v.y))
+        const pickCorner = (tx, ty) => vertices.reduce((best, v) => {
+          const score = Math.abs(v.x - tx) / Math.max(0.001, maxX - minX) + Math.abs(v.y - ty) / Math.max(0.001, maxY - minY)
+          return !best || score < best.score ? { score, v } : best
+        }, null).v.clone()
+        const corners = [pickCorner(minX, minY), pickCorner(maxX, minY), pickCorner(maxX, maxY), pickCorner(minX, maxY)]
+        screenCorners = corners.map((position, index) => {
           const anchor = new THREE.Object3D()
-          anchor.name = `JohnWolfScreenCorner${index + 1}`
+          anchor.name = `JohnWolfM5ScreenCorner${index + 1}`
           anchor.position.copy(position)
           screenPlane.add(anchor)
           return anchor
         })
-        const screenTexture = new THREE.TextureLoader().load('/assets/start-project/macbook/home_screen_diff.jpg')
-        screenTexture.colorSpace = THREE.SRGBColorSpace
-        screenTexture.flipY = false
-        screenPlane.material = new THREE.MeshBasicMaterial({ map: screenTexture, color: 0xffffff, toneMapped: false, side: THREE.DoubleSide })
         screenPlane.visible = true
         lidPivot.rotation.x = CLOSED_ANGLE
         modelLoaded = true
         resolve(true)
       } catch (error) {
         modelFailed = true
-        console.error('MacBook Pro 2020 setup failed.', error)
+        console.error('MacBook Pro 14-inch M5 setup failed.', error)
         resolve(false)
       }
     }, undefined, (error) => {
       modelFailed = true
-      console.error('MacBook Pro 2020 model failed to load.', error)
+      console.error('MacBook Pro 14-inch M5 model failed to load.', error)
       resolve(false)
     })
   })
