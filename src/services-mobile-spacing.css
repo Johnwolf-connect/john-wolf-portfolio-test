@@ -1,0 +1,15 @@
+/* ===== SERVICES MOBILE HEADER / CARD SPACING ===== */
+@media (max-width: 620px) {
+  /* Keep the Services headline to two rows: “Move through” / “the work.” */
+  .portfolio-page .carousel-heading h2 {
+    max-width: 6.6em;
+    font-size: clamp(2.45rem, 11vw, 3.45rem);
+    line-height: 0.95;
+  }
+
+  /* Use the reclaimed headline height to give the card a clean lane below the copy. */
+  .portfolio-page .carousel-viewport {
+    inset: 21rem 0 5.7rem;
+  }
+}
+/* ===== SERVICES MOBILE HEADER / CARD SPACING: END ===== */
