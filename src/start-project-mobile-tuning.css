@@ -1,0 +1,64 @@
+/* Mobile-only Start a Project composition refinements.
+   Desktop and tablet remain on the locked approved layout. */
+@media (max-width: 767px) {
+  /* Pull the rock upward so it visually belongs to the laptop instead of floating below it. */
+  html .spt-stage .spt-rock-scene {
+    top: 23dvh;
+  }
+
+  /* Lift the form into the first viewport and remove the forced full-screen card height. */
+  html .spt-stage .spt-mobile-page-flow {
+    padding-top: 44dvh;
+  }
+
+  html .spt-stage .spt-form-card {
+    min-height: 0;
+    padding: 0.9rem 1rem 1.15rem;
+  }
+
+  /* Tighten only the mobile form rhythm so the complete card fits the screen cleanly. */
+  html .spt-stage .spt-form-intro {
+    margin: 0.5rem 0 0.75rem;
+    line-height: 1.32;
+  }
+
+  html .spt-stage .spt-form {
+    gap: 0.52rem;
+  }
+
+  html .spt-stage .spt-form label {
+    gap: 0.28rem;
+  }
+
+  html .spt-stage .spt-form input,
+  html .spt-stage .spt-form select,
+  html .spt-stage .spt-upload-control {
+    height: 2.6rem;
+  }
+
+  html .spt-stage .spt-form textarea {
+    min-height: 5.5rem;
+  }
+
+  html .spt-stage .spt-form button {
+    min-height: 2.8rem;
+    margin-top: 0.15rem;
+  }
+}
+
+@media (max-width: 390px) {
+  /* Preserve the same compact composition on narrow phones; override the older tall-card fallback. */
+  html .spt-stage .spt-rock-scene {
+    top: 23dvh;
+    width: min(48vw, 320px);
+  }
+
+  html .spt-stage .spt-mobile-page-flow {
+    padding-top: 44dvh;
+  }
+
+  html .spt-stage .spt-form-card {
+    min-height: 0;
+    padding: 0.85rem 0.9rem 1.05rem;
+  }
+}
