@@ -11,5 +11,10 @@
   .portfolio-page .carousel-viewport {
     inset: 21rem 0 5.7rem;
   }
+
+  /* Slightly reduce the mobile cards while preserving their existing proportions. */
+  .portfolio-page .carousel-card {
+    width: min(82vw, 29.5rem);
+  }
 }
 /* ===== SERVICES MOBILE HEADER / CARD SPACING: END ===== */
