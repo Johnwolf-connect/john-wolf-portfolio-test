@@ -118,7 +118,7 @@ function getLayout(camera, screenWidth) {
   const height = window.innerHeight
   const vertical = 2 * camera.position.z * Math.tan((camera.fov * Math.PI) / 360)
   const horizontal = vertical * (width / height)
-  const mobile = width < 820
+  const mobile = width < 768
   return {
     width, height, mobile,
     initialScale: horizontal / screenWidth,
