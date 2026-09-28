@@ -6,14 +6,14 @@
     top: 23dvh;
   }
 
-  /* Lift the form into the first viewport and remove the forced full-screen card height. */
+  /* Lift the complete form card into the first viewport so its bottom edge is never visually cut off. */
   html .spt-stage .spt-mobile-page-flow {
-    padding-top: 44dvh;
+    padding-top: 39.5dvh;
   }
 
   html .spt-stage .spt-form-card {
     min-height: 0;
-    padding: 0.9rem 1rem 1.15rem;
+    padding: 0.9rem 1rem 0.9rem;
   }
 
   /* Tighten only the mobile form rhythm so the complete card fits the screen cleanly. */
@@ -54,11 +54,11 @@
   }
 
   html .spt-stage .spt-mobile-page-flow {
-    padding-top: 44dvh;
+    padding-top: 39.5dvh;
   }
 
   html .spt-stage .spt-form-card {
     min-height: 0;
-    padding: 0.85rem 0.9rem 1.05rem;
+    padding: 0.85rem 0.9rem 0.85rem;
   }
 }
