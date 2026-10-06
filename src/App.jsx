@@ -509,8 +509,17 @@ export default function App() {
     contactReturnY.current = window.scrollY
     contactReturnNavigation.current = activeNavigation
 
-    const showContactExperience = () => {
+    const showStartProjectExperience = () => {
       setActiveNavigation('Contact')
+
+      const startProject =
+        window.__johnWolfStartProjectTransition
+
+      if (startProject?.open) {
+        startProject.open()
+        return
+      }
+
       setContactOpen(true)
     }
 
@@ -522,12 +531,12 @@ export default function App() {
       setWebsitesPageOpen(false)
       setFroidPageOpen(false)
       window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(showContactExperience)
+        window.requestAnimationFrame(showStartProjectExperience)
       })
       return
     }
 
-    showContactExperience()
+    showStartProjectExperience()
     return
   }
 
