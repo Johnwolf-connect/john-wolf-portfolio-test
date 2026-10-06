@@ -1,6 +1,12 @@
 /* Mobile-only Start a Project composition refinements.
    Desktop and tablet remain on the locked approved layout. */
 @media (max-width: 767px) {
+  /* Mobile Safari can composite the full-screen WebGL canvas above the rock.
+     Keep the rock visibly between the laptop and the form on phones. */
+  html .spt-stage .spt-rock-scene {
+    z-index: 5;
+  }
+
   /* Pull the rock upward so it visually belongs to the laptop instead of floating below it. */
   html .spt-stage .spt-rock-scene {
     top: 23dvh;
