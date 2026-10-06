@@ -1,20 +1,56 @@
 /* ===== SERVICES MOBILE HEADER / CARD SPACING ===== */
 @media (max-width: 620px) {
-  /* Keep the Services headline to two rows: “Move through” / “the work.” */
+  .portfolio-page .carousel-heading {
+    top: calc(4.85rem + env(safe-area-inset-top, 0px));
+  }
+
   .portfolio-page .carousel-heading h2 {
     max-width: 6.6em;
     font-size: clamp(2.45rem, 11vw, 3.45rem);
     line-height: 0.95;
   }
 
-  /* Use the reclaimed headline height to give the card a clean lane below the copy. */
   .portfolio-page .carousel-viewport {
-    inset: 21rem 0 5.7rem;
+    inset: 20.25rem 0 calc(4.9rem + env(safe-area-inset-bottom, 0px));
   }
 
-  /* Slightly reduce the mobile cards while preserving their existing proportions. */
   .portfolio-page .carousel-card {
     width: min(82vw, 29.5rem);
+    max-height: 43svh;
+  }
+
+  .services-card-nav {
+    bottom: calc(.75rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (max-width: 390px) {
+  .portfolio-page .carousel-heading {
+    top: calc(4.55rem + env(safe-area-inset-top, 0px));
+  }
+
+  .portfolio-page .carousel-heading h2 {
+    font-size: clamp(2.3rem, 10.7vw, 3rem);
+  }
+
+  .services-intro {
+    margin-top: .7rem;
+    font-size: .78rem;
+    line-height: 1.4;
+  }
+
+  .services-contact-button {
+    min-height: 2.65rem;
+    margin-top: .65rem;
+  }
+
+  .portfolio-page .carousel-viewport {
+    inset: 18.9rem 0 calc(4.75rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .portfolio-page .carousel-card {
+    width: min(78vw, 19rem);
+    max-height: 42svh;
   }
 }
 /* ===== SERVICES MOBILE HEADER / CARD SPACING: END ===== */
