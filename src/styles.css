@@ -3219,14 +3219,18 @@ body::-webkit-scrollbar,
 }
 /* ===== SERVICES CARD SIZE / ENTRY POSITION: END ===== */
 
-/* ===== SERVICES DESKTOP VERTICAL CENTER FIX ===== */
+/* ===== SERVICES CARD TRUE CENTER FIX ===== */
 @media (min-width: 821px) {
   .portfolio-page .carousel-viewport.archive-seamless-stage {
-    /* Center the card rail in the visible Services stage. */
-    top: 50%;
-    bottom: auto;
-    height: min(68svh, 29rem);
-    transform: translateY(-50%);
+    top: 0;
+    bottom: 0;
+    height: auto;
+    transform: none;
+  }
+
+  .portfolio-page .archive-seamless-card {
+    /* GSAP controls yPercent; this moves its actual anchor to the visual center. */
+    top: calc(50% + clamp(8rem, 24svh, 10rem));
   }
 }
-/* ===== SERVICES DESKTOP VERTICAL CENTER FIX: END ===== */
+/* ===== SERVICES CARD TRUE CENTER FIX: END ===== */
