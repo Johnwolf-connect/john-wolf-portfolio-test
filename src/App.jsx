@@ -70,13 +70,6 @@ const carouselCards = [
     video: '/assets/carousel/websites.mp4',
     poster: '/assets/carousel/websites.jpg',
   },
-  {
-    title: 'Illustrations',
-    eyebrow: 'Custom artwork',
-    description: 'Original visuals built to give campaigns and stories their own character.',
-    video: '/assets/carousel/illustrations.mp4',
-    poster: '/assets/carousel/illustrations.jpg',
-  },
 ]
 
 /* ===== BRAND GUIDELINES PROJECT CAROUSEL ===== */
