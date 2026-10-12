@@ -3219,18 +3219,18 @@ body::-webkit-scrollbar,
 }
 /* ===== SERVICES CARD SIZE / ENTRY POSITION: END ===== */
 
-/* ===== SERVICES CARD TRUE CENTER FIX ===== */
+/* ===== SERVICES DESKTOP CARD CENTER: START ===== */
 @media (min-width: 821px) {
   .portfolio-page .carousel-viewport.archive-seamless-stage {
     top: 0;
+    right: 0;
     bottom: 0;
     height: auto;
     transform: none;
   }
 
   .portfolio-page .archive-seamless-card {
-    /* GSAP controls yPercent; this moves its actual anchor to the visual center. */
-    top: calc(50% + clamp(8rem, 24svh, 10rem));
+    top: 50%;
   }
 }
-/* ===== SERVICES CARD TRUE CENTER FIX: END ===== */
+/* ===== SERVICES DESKTOP CARD CENTER: END ===== */
