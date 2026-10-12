@@ -1364,7 +1364,7 @@ useEffect(() => {
           xPercent:
             -50 + offset * 100,
           yPercent:
-            (desktop ? -18 : -50) +
+            (desktop ? 8 : -50) +
             Math.min(distance, 2) * 2.4,
           scale,
           rotateY: clamp(
