@@ -3218,3 +3218,15 @@ body::-webkit-scrollbar,
   }
 }
 /* ===== SERVICES CARD SIZE / ENTRY POSITION: END ===== */
+
+/* ===== SERVICES DESKTOP VERTICAL CENTER FIX ===== */
+@media (min-width: 821px) {
+  .portfolio-page .carousel-viewport.archive-seamless-stage {
+    /* Center the card rail in the visible Services stage. */
+    top: 50%;
+    bottom: auto;
+    height: min(68svh, 29rem);
+    transform: translateY(-50%);
+  }
+}
+/* ===== SERVICES DESKTOP VERTICAL CENTER FIX: END ===== */
