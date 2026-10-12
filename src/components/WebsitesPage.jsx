@@ -27,10 +27,6 @@ const websiteCollections = [
       ['ShayTax', 'Service', '#3aa8ff', '#061735', null, SHAYTAX_COVER_URL, SHAYTAX_SITE_URL],
       ['3 LowKee', 'Service', '#25f4ee', '#ef315f', null, LOWKEE_COVER_URL, LOWKEE_SITE_URL],
       ['Rooted Beauty', 'Service', '#ff5aa9', '#1a080f', null, ROOTED_BEAUTY_COVER_URL, ROOTED_BEAUTY_SITE_URL],
-      ['Designer Site 01', 'Designer', '#b58cff', '#321451'],
-      ['Service Site 02', 'Service', '#71e0b4', '#103f43'],
-      ['Playable Site 02', 'Playable', '#ffd35f', '#682e16'],
-      ['Designer Site 02', 'Designer', '#ff79b7', '#4f153d'],
     ],
   },
   {
@@ -41,9 +37,6 @@ const websiteCollections = [
       ['Rooted Beauty', 'Service', '#ff5aa9', '#1a080f', null, ROOTED_BEAUTY_COVER_URL, ROOTED_BEAUTY_SITE_URL],
       ['ShayTax', 'Service', '#3aa8ff', '#061735', null, SHAYTAX_COVER_URL, SHAYTAX_SITE_URL],
       ['3 LowKee', 'Service', '#25f4ee', '#ef315f', null, LOWKEE_COVER_URL, LOWKEE_SITE_URL],
-      ['Service Site 01', 'Service', '#65d7ff', '#102c64'],
-      ['Service Site 02', 'Service', '#71e0b4', '#103f43'],
-      ['Service Site 03', 'Service', '#ffbd73', '#5b2c20'],
     ],
   },
   {
@@ -53,7 +46,6 @@ const websiteCollections = [
     projects: [
       ['Froid', 'Playable', '#a9e4ff', '#102c64', 'froid', FROID_COVER_URL, FROID_SITE_URL],
       ['Nightfall', 'Playable', '#d94c5f', '#180b1a', 'nightfall', NIGHTFALL_COVER_URL, NIGHTFALL_SITE_URL],
-      ['Playable Site 03', 'Playable', '#74d8ff', '#18325f'],
     ],
   },
   {
@@ -61,9 +53,6 @@ const websiteCollections = [
     title: 'Designer',
     description: 'Visual-first portfolio sites where craft and personality lead.',
     projects: [
-      ['Designer Site 01', 'Designer', '#b58cff', '#321451'],
-      ['Designer Site 02', 'Designer', '#ff79b7', '#4f153d'],
-      ['Designer Site 03', 'Designer', '#9af0e2', '#174744'],
     ],
   },
 ]
