@@ -13,7 +13,7 @@ const SHAYTAX_COVER_URL = '/assets/websites/shaytax-cover.png'
 const LOWKEE_SITE_URL = 'https://3lowkee-live.vercel.app/'
 const LOWKEE_COVER_URL = '/assets/websites/3lowkee-cover.jpg'
 const ROOTED_BEAUTY_SITE_URL = 'https://rooted-beauty-hair-salon.vercel.app/'
-const ROOTED_BEAUTY_COVER_URL = 'https://at.adobe.com/sJRKI9bdwfI06nTt'
+const ROOTED_BEAUTY_COVER_URL = '/assets/websites/rooted-beauty-cover.jpg'
 const WEBSITES_BACKGROUND_URL = '/assets/websites/atlanta-background.png'
 
 const websiteCollections = [
