@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "mkdir -p public/assets/websites public/assets/brand-guidelines/projects && curl -fLsS 'https://at.adobe.com/0lIQJ7pqxx5NCK5S' -o public/assets/websites/rooted-beauty-cover.jpg && test \"$(head -c 3 public/assets/websites/rooted-beauty-cover.jpg | od -An -tx1 | tr -d ' \\\\n')\" = ffd8ff && curl -fLsS 'https://at.adobe.com/j0IzZF2K6QSn2NMO' -o public/assets/brand-guidelines/projects/chick-muy-caliente-brand-guidelines.pdf && test \"$(head -c 4 public/assets/brand-guidelines/projects/chick-muy-caliente-brand-guidelines.pdf)\" = '%PDF' && curl -fLsS 'https://at.adobe.com/WziflhlAHJKcFJbB' -o public/assets/brand-guidelines/projects/riches-cosmetics-brand-guidelines.pdf && test \"$(head -c 4 public/assets/brand-guidelines/projects/riches-cosmetics-brand-guidelines.pdf)\" = '%PDF' && vite build",
+    "build": "mkdir -p public/assets/brand-guidelines/projects && curl -fLsS 'https://at.adobe.com/WziflhlAHJKcFJbB' -o public/assets/brand-guidelines/projects/riches-cosmetics-brand-guidelines.pdf && test \"$(head -c 4 public/assets/brand-guidelines/projects/riches-cosmetics-brand-guidelines.pdf)\" = '%PDF' && vite build",
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
