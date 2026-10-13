@@ -536,7 +536,7 @@ export default function BrandVault({
           throw new Error(
             `Invalid PDF response for ${project.pdf}: ${header}`,
           )
-        )
+        }
 
         if (cancelled) {
           return
