@@ -528,6 +528,16 @@ export default function BrandVault({
           await response.arrayBuffer(),
         )
 
+        const header = new TextDecoder('ascii').decode(
+          pdfBytes.slice(0, 5),
+        )
+
+        if (header !== '%PDF-') {
+          throw new Error(
+            `Invalid PDF response for ${project.pdf}: ${header}`,
+          )
+        )
+
         if (cancelled) {
           return
         }
@@ -535,6 +545,8 @@ export default function BrandVault({
         loadingTask = getDocument({
           data: pdfBytes,
           useSystemFonts: true,
+          disableFontFace: false,
+          isEvalSupported: false,
         })
 
         const pdfDocument =
