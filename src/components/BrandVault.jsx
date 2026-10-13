@@ -9,10 +9,11 @@ import {
   GlobalWorkerOptions,
   getDocument,
 } from 'pdfjs-dist/legacy/build/pdf.mjs'
-import pdfWorkerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url'
+import PdfJsWorker from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?worker'
 import './BrandVault.css'
 
-GlobalWorkerOptions.workerSrc = pdfWorkerUrl
+const pdfWorkerPort = new PdfJsWorker()
+GlobalWorkerOptions.workerPort = pdfWorkerPort
 
 const brandThemes = {
   'Riches Cosmetics': {
@@ -497,12 +498,8 @@ export default function BrandVault({
     }
 
     let cancelled = false
-    let loadedDocument = null
-
-    const loadingTask = getDocument({
-      url: project.pdf,
-      useSystemFonts: true,
-    })
+    let loadingTask = null
+    const abortController = new AbortController()
 
     setLoadState('loading')
     setDocumentProxy(null)
@@ -514,20 +511,48 @@ export default function BrandVault({
     setTurnToken(0)
     currentPageSnapshotRef.current = null
 
-    loadingTask.promise
-      .then((pdfDocument) => {
+    const loadPdf = async () => {
+      try {
+        const response = await fetch(project.pdf, {
+          signal: abortController.signal,
+          cache: 'force-cache',
+        })
+
+        if (!response.ok) {
+          throw new Error(
+            `PDF request failed with status ${response.status}`,
+          )
+        }
+
+        const pdfBytes = new Uint8Array(
+          await response.arrayBuffer(),
+        )
+
         if (cancelled) {
           return
         }
 
-        loadedDocument = pdfDocument
+        loadingTask = getDocument({
+          data: pdfBytes,
+          useSystemFonts: true,
+        })
+
+        const pdfDocument =
+          await loadingTask.promise
+
+        if (cancelled) {
+          await pdfDocument.destroy()
+          return
+        }
 
         setDocumentProxy(pdfDocument)
         setPageCount(pdfDocument.numPages)
         setLoadState('ready')
-      })
-      .catch((error) => {
-        if (!cancelled) {
+      } catch (error) {
+        if (
+          !cancelled &&
+          error?.name !== 'AbortError'
+        ) {
           console.error(
             'Brand Vault PDF loading failed:',
             error,
@@ -535,21 +560,21 @@ export default function BrandVault({
 
           setLoadState('error')
         }
-      })
+      }
+    }
+
+    loadPdf()
 
     return () => {
       cancelled = true
+      abortController.abort()
 
-      // Destroying the loading task also disposes its loaded document.
-      // Calling destroy on both objects during a project switch can race
-      // and crash the entire React tree in PDF.js 6.
       if (
+        loadingTask &&
         typeof loadingTask.destroy === 'function'
       ) {
         loadingTask.destroy()
       }
-
-      loadedDocument = null
     }
   }, [
     open,
