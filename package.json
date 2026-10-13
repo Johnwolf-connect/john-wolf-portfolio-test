@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "vite build",
+    "build": "mkdir -p public/assets/brand-guidelines/projects && curl -fLsS 'https://at.adobe.com/RmQXEtZYuL9zMJGn' -o public/assets/brand-guidelines/projects/chick-muy-caliente-brand-guidelines.pdf && test \"$(head -c 4 public/assets/brand-guidelines/projects/chick-muy-caliente-brand-guidelines.pdf)\" = '%PDF' && vite build",
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
