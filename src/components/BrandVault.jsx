@@ -545,8 +545,6 @@ export default function BrandVault({
         loadingTask = getDocument({
           data: pdfBytes,
           useSystemFonts: true,
-          disableFontFace: false,
-          isEvalSupported: false,
         })
 
         const pdfDocument =
