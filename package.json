@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "mkdir -p public/assets/brand-guidelines/projects && curl -fLsS 'https://at.adobe.com/WziflhlAHJKcFJbB' -o public/assets/brand-guidelines/projects/riches-cosmetics-brand-guidelines.pdf && test \"$(head -c 4 public/assets/brand-guidelines/projects/riches-cosmetics-brand-guidelines.pdf)\" = '%PDF' && vite build",
+    "build": "vite build",
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
