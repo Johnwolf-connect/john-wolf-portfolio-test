@@ -1,0 +1,29 @@
+name: Install Rooted Beauty cover
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  install:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install cover
+        run: |
+          mkdir -p public/assets/websites
+          curl -L --fail 'https://at.adobe.com/0lIQJ7pqxx5NCK5S' -o public/assets/websites/rooted-beauty-cover.jpg
+          python - <<'PY'
+          p='src/components/WebsitesPage.jsx'
+          s=open(p).read()
+          s=s.replace("const ROOTED_BEAUTY_COVER_URL = 'https://at.adobe.com/sJRKI9bdwfI06nTt'", "const ROOTED_BEAUTY_COVER_URL = '/assets/websites/rooted-beauty-cover.jpg'")
+          open(p,'w').write(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/assets/websites/rooted-beauty-cover.jpg src/components/WebsitesPage.jsx
+          git commit -m "Install Rooted Beauty portfolio cover"
+          git push
