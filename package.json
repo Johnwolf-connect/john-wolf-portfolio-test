@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "mkdir -p public/assets/websites && curl -fLsS 'https://at.adobe.com/0lIQJ7pqxx5NCK5S' -o public/assets/websites/rooted-beauty-cover.jpg && vite build",
+    "build": "mkdir -p public/assets/websites && curl -fLsS 'https://at.adobe.com/0lIQJ7pqxx5NCK5S' -o public/assets/websites/rooted-beauty-cover.jpg && test \"$(head -c 3 public/assets/websites/rooted-beauty-cover.jpg | od -An -tx1 | tr -d ' \\\\n')\" = ffd8ff && vite build",
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
